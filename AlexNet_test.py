@@ -3,6 +3,10 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import plot_model
+
+from tensorflow.python.profiler import model_analyzer
+from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 import os
 import matplotlib.pyplot as plt
@@ -80,6 +84,19 @@ def Train(model, x_train, y_train, x_test, y_test):
     plt.ylabel("Loss")
 
     plt.tight_layout()
+
+    #cal FLOPs
+    @tf.function
+    def model_fn(x):
+        return model(x)
+
+    input_tensor = tf.random.normal([1, 28, 28, 1])
+    concrete_func = model_fn.get_concrete_function(input_tensor)
+
+    profiler = model_analyzer.Profiler(graph=concrete_func.graph)
+    opts = ProfileOptionBuilder.float_operation()
+
+    FLOPs = profiler.profile_operations(options=opts)
     
     #save file
     save_dir = 'AlexNet_Data'
@@ -89,16 +106,21 @@ def Train(model, x_train, y_train, x_test, y_test):
     
     graph_path = os.path.join(save_dir, 'training_graph.png')
     plt.savefig(graph_path)
-    plt.show()
     
     log_path = os.path.join(save_dir, 'training_log.txt')
+    model_path = os.path.join(save_dir, 'model.png')
+
     with open(log_path, 'w') as f:
         f.write(f"{MNIST_data_size} MNIST Data size, {EPOCH} epochs\n\n")
         f.write("Epoch\tAccuracy\tLoss\n")
         for i in range(len(epochs)):
             f.write(f"{epochs[i]}\t{logger.accuracy[i]}\t{logger.loss[i]}\n")
         f.write(f"\nMax Parameter Count: {logger.params}\n")
-    
+        f.write(f"\nTotal FLOPs : {FLOPs}\n")
+
+    plot_model(model, to_file=model_path, show_shapes=True, show_layer_names=True)
+
+    print(f'FLOPs: {FLOPs}')
     print('Max parameter:', logger.params)
     print(f'Graph saved to: {graph_path}')
     print(f'Log saved to: {log_path}')
@@ -118,7 +140,7 @@ class LrLogger(tf.keras.callbacks.Callback):
         self.loss.append(ls)
         self.params = max(self.params, self.model.count_params())
 
-if __name__ == '__main__':
+def ExAlexNet():
     x_train, y_train, x_test, y_test = PreProcessing()
     Model = AlexNet()
     Model = ModelCompile(Model)
