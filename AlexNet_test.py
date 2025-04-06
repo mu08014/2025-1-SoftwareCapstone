@@ -10,15 +10,19 @@ from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 
 MNIST_data_size = 1000
 EPOCH = 25
 
+
 def PreProcessing():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    x_train = x_train[:MNIST_data_size]
-    y_train = y_train[:MNIST_data_size]
+    indices = np.random.permutation(len(x_train))[:MNIST_data_size]
+
+    x_train = x_train[indices]
+    y_train = y_train[indices]
 
     x_train = x_train.reshape(-1, 28, 28, 1).astype('float32') / 255.0
     x_test = x_test.reshape(-1, 28, 28, 1).astype('float32') / 255.0

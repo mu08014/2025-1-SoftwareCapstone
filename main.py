@@ -1,5 +1,5 @@
 from AlexNet_test import ExAlexNet
-from QCNN_Alexnet_1 import *
+from Theoric_QCNN_Alexnet import ExTQCNN, Quanv3x3LayerCircuit
 
 if __name__ == '__main__':
-    ExAlexNet()
+    ExTQCNN()

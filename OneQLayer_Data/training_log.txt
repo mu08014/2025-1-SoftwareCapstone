@@ -1,44 +1,22 @@
 1000 MNIST Data size, 25 epochs
 
 Epoch	Accuracy	Loss
-1	0.26100000739097595	3.8930792808532715
-2	0.5230000019073486	1.4434421062469482
-3	0.7590000033378601	0.7334206700325012
-4	0.8539999723434448	0.44294172525405884
-5	0.9150000214576721	0.2526685893535614
-6	0.9430000185966492	0.1947108507156372
-7	0.9539999961853027	0.13891111314296722
-8	0.9710000157356262	0.09175781160593033
-9	0.9909999966621399	0.046657104045152664
-10	0.9769999980926514	0.06665638834238052
-11	0.9869999885559082	0.035594940185546875
-12	0.9850000143051147	0.04327361658215523
-13	0.9940000176429749	0.032567646354436874
-14	0.9869999885559082	0.043597571551799774
-15	0.9900000095367432	0.024672267958521843
-16	0.9959999918937683	0.011315188370645046
-17	0.9929999709129333	0.017296643927693367
-18	0.9909999966621399	0.029481561854481697
-19	0.9959999918937683	0.011037041433155537
-20	0.9950000047683716	0.014710992574691772
-21	0.9959999918937683	0.01710241660475731
-22	0.996999979019165	0.013707950711250305
-23	0.9980000257492065	0.0067430296912789345
-24	0.996999979019165	0.009701751172542572
-25	0.996999979019165	0.009497035294771194
+1	0.0	2.968672275543213
+2	0.5	1.208066463470459
+3	0.75	2.4636833667755127
 
-Max Parameter Count: 4443914
+Max Parameter Count: 4443018
 
 Total FLOPs : name: "_TFProfRoot"
-total_float_ops: 180519356
+total_float_ops: 179465276
 children {
   name: "Conv2D"
-  float_ops: 174311424
-  total_float_ops: 180519356
+  float_ops: 173408256
+  total_float_ops: 179465276
   graph_nodes {
     name: "sequential_1/conv2d_1/convolution"
-    float_ops: 903168
-    total_float_ops: 903168
+    float_ops: 28901376
+    total_float_ops: 28901376
     input_shapes {
       key: 0
       value {
@@ -46,13 +24,13 @@ children {
           size: 1
         }
         dim {
-          size: 28
+          size: 14
         }
         dim {
-          size: 28
+          size: 14
         }
         dim {
-          size: 1
+          size: 64
         }
       }
     }
@@ -66,10 +44,10 @@ children {
           size: 3
         }
         dim {
-          size: 1
+          size: 64
         }
         dim {
-          size: 64
+          size: 128
         }
       }
     }
@@ -86,13 +64,13 @@ children {
           size: 1
         }
         dim {
-          size: 14
+          size: 7
         }
         dim {
-          size: 14
+          size: 7
         }
         dim {
-          size: 64
+          size: 128
         }
       }
     }
@@ -106,10 +84,10 @@ children {
           size: 3
         }
         dim {
-          size: 64
+          size: 128
         }
         dim {
-          size: 128
+          size: 256
         }
       }
     }
@@ -117,8 +95,8 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_2_1/convolution"
-    float_ops: 28901376
-    total_float_ops: 28901376
+    float_ops: 57802752
+    total_float_ops: 57802752
     input_shapes {
       key: 0
       value {
@@ -132,7 +110,7 @@ children {
           size: 7
         }
         dim {
-          size: 128
+          size: 256
         }
       }
     }
@@ -146,7 +124,7 @@ children {
           size: 3
         }
         dim {
-          size: 128
+          size: 256
         }
         dim {
           size: 256
@@ -195,50 +173,10 @@ children {
     }
     total_definition_count: 1
   }
-  graph_nodes {
-    name: "sequential_1/conv2d_4_1/convolution"
-    float_ops: 57802752
-    total_float_ops: 57802752
-    input_shapes {
-      key: 0
-      value {
-        dim {
-          size: 1
-        }
-        dim {
-          size: 7
-        }
-        dim {
-          size: 7
-        }
-        dim {
-          size: 256
-        }
-      }
-    }
-    input_shapes {
-      key: 1
-      value {
-        dim {
-          size: 3
-        }
-        dim {
-          size: 3
-        }
-        dim {
-          size: 256
-        }
-        dim {
-          size: 256
-        }
-      }
-    }
-    total_definition_count: 1
-  }
   children {
     name: "MatMul"
     float_ops: 5777408
-    total_float_ops: 6207932
+    total_float_ops: 6057020
     graph_nodes {
       name: "sequential_1/dense_1/MatMul"
       float_ops: 4718592
@@ -324,33 +262,11 @@ children {
       total_definition_count: 1
     }
     children {
-      name: "Mul"
-      float_ops: 114816
-      total_float_ops: 430524
+      name: "MaxPool"
+      float_ops: 84480
+      total_float_ops: 279612
       graph_nodes {
-        name: "sequential_1/batch_normalization_1/batchnorm/mul"
-        float_ops: 64
-        total_float_ops: 64
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 64
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 64
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_1/batchnorm/mul_1"
+        name: "sequential_1/max_pooling2d_1/MaxPool2d"
         float_ops: 50176
         total_float_ops: 50176
         input_shapes {
@@ -370,62 +286,10 @@ children {
             }
           }
         }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 64
-            }
-          }
-        }
         total_definition_count: 1
       }
       graph_nodes {
-        name: "sequential_1/batch_normalization_1/batchnorm/mul_2"
-        float_ops: 64
-        total_float_ops: 64
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 64
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 64
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_1_2/batchnorm/mul"
-        float_ops: 128
-        total_float_ops: 128
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 128
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 128
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_1_2/batchnorm/mul_1"
+        name: "sequential_1/max_pooling2d_1_2/MaxPool2d"
         float_ops: 25088
         total_float_ops: 25088
         input_shapes {
@@ -445,64 +309,12 @@ children {
             }
           }
         }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 128
-            }
-          }
-        }
         total_definition_count: 1
       }
       graph_nodes {
-        name: "sequential_1/batch_normalization_1_2/batchnorm/mul_2"
-        float_ops: 128
-        total_float_ops: 128
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 128
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 128
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_2_1/batchnorm/mul"
-        float_ops: 256
-        total_float_ops: 256
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_2_1/batchnorm/mul_1"
-        float_ops: 12544
-        total_float_ops: 12544
+        name: "sequential_1/max_pooling2d_2_1/MaxPool2d"
+        float_ops: 9216
+        total_float_ops: 9216
         input_shapes {
           key: 0
           value {
@@ -515,186 +327,6 @@ children {
             dim {
               size: 7
             }
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_2_1/batchnorm/mul_2"
-        float_ops: 256
-        total_float_ops: 256
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_3_1/batchnorm/mul"
-        float_ops: 256
-        total_float_ops: 256
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_3_1/batchnorm/mul_1"
-        float_ops: 12544
-        total_float_ops: 12544
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 1
-            }
-            dim {
-              size: 7
-            }
-            dim {
-              size: 7
-            }
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_3_1/batchnorm/mul_2"
-        float_ops: 256
-        total_float_ops: 256
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_4_1/batchnorm/mul"
-        float_ops: 256
-        total_float_ops: 256
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_4_1/batchnorm/mul_1"
-        float_ops: 12544
-        total_float_ops: 12544
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 1
-            }
-            dim {
-              size: 7
-            }
-            dim {
-              size: 7
-            }
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        total_definition_count: 1
-      }
-      graph_nodes {
-        name: "sequential_1/batch_normalization_4_1/batchnorm/mul_2"
-        float_ops: 256
-        total_float_ops: 256
-        input_shapes {
-          key: 0
-          value {
-            dim {
-              size: 256
-            }
-          }
-        }
-        input_shapes {
-          key: 1
-          value {
             dim {
               size: 256
             }
@@ -703,27 +335,18 @@ children {
         total_definition_count: 1
       }
       children {
-        name: "BiasAdd"
-        float_ops: 114442
-        total_float_ops: 315708
+        name: "Mul"
+        float_ops: 64512
+        total_float_ops: 195132
         graph_nodes {
-          name: "sequential_1/conv2d_1/BiasAdd"
-          float_ops: 50176
-          total_float_ops: 50176
+          name: "sequential_1/batch_normalization_1/batchnorm/mul"
+          float_ops: 128
+          total_float_ops: 128
           input_shapes {
             key: 0
             value {
               dim {
-                size: 1
-              }
-              dim {
-                size: 28
-              }
-              dim {
-                size: 28
-              }
-              dim {
-                size: 64
+                size: 128
               }
             }
           }
@@ -731,14 +354,14 @@ children {
             key: 1
             value {
               dim {
-                size: 64
+                size: 128
               }
             }
           }
           total_definition_count: 1
         }
         graph_nodes {
-          name: "sequential_1/conv2d_1_2/BiasAdd"
+          name: "sequential_1/batch_normalization_1/batchnorm/mul_1"
           float_ops: 25088
           total_float_ops: 25088
           input_shapes {
@@ -769,7 +392,51 @@ children {
           total_definition_count: 1
         }
         graph_nodes {
-          name: "sequential_1/conv2d_2_1/BiasAdd"
+          name: "sequential_1/batch_normalization_1/batchnorm/mul_2"
+          float_ops: 128
+          total_float_ops: 128
+          input_shapes {
+            key: 0
+            value {
+              dim {
+                size: 128
+              }
+            }
+          }
+          input_shapes {
+            key: 1
+            value {
+              dim {
+                size: 128
+              }
+            }
+          }
+          total_definition_count: 1
+        }
+        graph_nodes {
+          name: "sequential_1/batch_normalization_1_2/batchnorm/mul"
+          float_ops: 256
+          total_float_ops: 256
+          input_shapes {
+            key: 0
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          input_shapes {
+            key: 1
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          total_definition_count: 1
+        }
+        graph_nodes {
+          name: "sequential_1/batch_normalization_1_2/batchnorm/mul_1"
           float_ops: 12544
           total_float_ops: 12544
           input_shapes {
@@ -800,7 +467,51 @@ children {
           total_definition_count: 1
         }
         graph_nodes {
-          name: "sequential_1/conv2d_3_1/BiasAdd"
+          name: "sequential_1/batch_normalization_1_2/batchnorm/mul_2"
+          float_ops: 256
+          total_float_ops: 256
+          input_shapes {
+            key: 0
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          input_shapes {
+            key: 1
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          total_definition_count: 1
+        }
+        graph_nodes {
+          name: "sequential_1/batch_normalization_2_1/batchnorm/mul"
+          float_ops: 256
+          total_float_ops: 256
+          input_shapes {
+            key: 0
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          input_shapes {
+            key: 1
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          total_definition_count: 1
+        }
+        graph_nodes {
+          name: "sequential_1/batch_normalization_2_1/batchnorm/mul_1"
           float_ops: 12544
           total_float_ops: 12544
           input_shapes {
@@ -831,7 +542,51 @@ children {
           total_definition_count: 1
         }
         graph_nodes {
-          name: "sequential_1/conv2d_4_1/BiasAdd"
+          name: "sequential_1/batch_normalization_2_1/batchnorm/mul_2"
+          float_ops: 256
+          total_float_ops: 256
+          input_shapes {
+            key: 0
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          input_shapes {
+            key: 1
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          total_definition_count: 1
+        }
+        graph_nodes {
+          name: "sequential_1/batch_normalization_3_1/batchnorm/mul"
+          float_ops: 256
+          total_float_ops: 256
+          input_shapes {
+            key: 0
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          input_shapes {
+            key: 1
+            value {
+              dim {
+                size: 256
+              }
+            }
+          }
+          total_definition_count: 1
+        }
+        graph_nodes {
+          name: "sequential_1/batch_normalization_3_1/batchnorm/mul_1"
           float_ops: 12544
           total_float_ops: 12544
           input_shapes {
@@ -862,17 +617,14 @@ children {
           total_definition_count: 1
         }
         graph_nodes {
-          name: "sequential_1/dense_1/BiasAdd"
-          float_ops: 1024
-          total_float_ops: 1024
+          name: "sequential_1/batch_normalization_3_1/batchnorm/mul_2"
+          float_ops: 256
+          total_float_ops: 256
           input_shapes {
             key: 0
             value {
               dim {
-                size: 1
-              }
-              dim {
-                size: 1024
+                size: 256
               }
             }
           }
@@ -880,143 +632,18 @@ children {
             key: 1
             value {
               dim {
-                size: 1024
-              }
-            }
-          }
-          total_definition_count: 1
-        }
-        graph_nodes {
-          name: "sequential_1/dense_1_2/BiasAdd"
-          float_ops: 512
-          total_float_ops: 512
-          input_shapes {
-            key: 0
-            value {
-              dim {
-                size: 1
-              }
-              dim {
-                size: 512
-              }
-            }
-          }
-          input_shapes {
-            key: 1
-            value {
-              dim {
-                size: 512
-              }
-            }
-          }
-          total_definition_count: 1
-        }
-        graph_nodes {
-          name: "sequential_1/dense_2_1/BiasAdd"
-          float_ops: 10
-          total_float_ops: 10
-          input_shapes {
-            key: 0
-            value {
-              dim {
-                size: 1
-              }
-              dim {
-                size: 10
-              }
-            }
-          }
-          input_shapes {
-            key: 1
-            value {
-              dim {
-                size: 10
+                size: 256
               }
             }
           }
           total_definition_count: 1
         }
         children {
-          name: "AddV2"
-          float_ops: 113856
-          total_float_ops: 201266
+          name: "BiasAdd"
+          float_ops: 64266
+          total_float_ops: 130620
           graph_nodes {
-            name: "sequential_1/batch_normalization_1/batchnorm/add"
-            float_ops: 64
-            total_float_ops: 64
-            input_shapes {
-              key: 0
-              value {
-                dim {
-                  size: 64
-                }
-              }
-            }
-            input_shapes {
-              key: 1
-              value {
-                dim {
-                  size: 1
-                }
-              }
-            }
-            total_definition_count: 1
-          }
-          graph_nodes {
-            name: "sequential_1/batch_normalization_1/batchnorm/add_1"
-            float_ops: 50176
-            total_float_ops: 50176
-            input_shapes {
-              key: 0
-              value {
-                dim {
-                  size: 1
-                }
-                dim {
-                  size: 28
-                }
-                dim {
-                  size: 28
-                }
-                dim {
-                  size: 64
-                }
-              }
-            }
-            input_shapes {
-              key: 1
-              value {
-                dim {
-                  size: 64
-                }
-              }
-            }
-            total_definition_count: 1
-          }
-          graph_nodes {
-            name: "sequential_1/batch_normalization_1_2/batchnorm/add"
-            float_ops: 128
-            total_float_ops: 128
-            input_shapes {
-              key: 0
-              value {
-                dim {
-                  size: 128
-                }
-              }
-            }
-            input_shapes {
-              key: 1
-              value {
-                dim {
-                  size: 1
-                }
-              }
-            }
-            total_definition_count: 1
-          }
-          graph_nodes {
-            name: "sequential_1/batch_normalization_1_2/batchnorm/add_1"
+            name: "sequential_1/conv2d_1/BiasAdd"
             float_ops: 25088
             total_float_ops: 25088
             input_shapes {
@@ -1047,29 +674,7 @@ children {
             total_definition_count: 1
           }
           graph_nodes {
-            name: "sequential_1/batch_normalization_2_1/batchnorm/add"
-            float_ops: 256
-            total_float_ops: 256
-            input_shapes {
-              key: 0
-              value {
-                dim {
-                  size: 256
-                }
-              }
-            }
-            input_shapes {
-              key: 1
-              value {
-                dim {
-                  size: 1
-                }
-              }
-            }
-            total_definition_count: 1
-          }
-          graph_nodes {
-            name: "sequential_1/batch_normalization_2_1/batchnorm/add_1"
+            name: "sequential_1/conv2d_1_2/BiasAdd"
             float_ops: 12544
             total_float_ops: 12544
             input_shapes {
@@ -1100,29 +705,7 @@ children {
             total_definition_count: 1
           }
           graph_nodes {
-            name: "sequential_1/batch_normalization_3_1/batchnorm/add"
-            float_ops: 256
-            total_float_ops: 256
-            input_shapes {
-              key: 0
-              value {
-                dim {
-                  size: 256
-                }
-              }
-            }
-            input_shapes {
-              key: 1
-              value {
-                dim {
-                  size: 1
-                }
-              }
-            }
-            total_definition_count: 1
-          }
-          graph_nodes {
-            name: "sequential_1/batch_normalization_3_1/batchnorm/add_1"
+            name: "sequential_1/conv2d_2_1/BiasAdd"
             float_ops: 12544
             total_float_ops: 12544
             input_shapes {
@@ -1153,29 +736,7 @@ children {
             total_definition_count: 1
           }
           graph_nodes {
-            name: "sequential_1/batch_normalization_4_1/batchnorm/add"
-            float_ops: 256
-            total_float_ops: 256
-            input_shapes {
-              key: 0
-              value {
-                dim {
-                  size: 256
-                }
-              }
-            }
-            input_shapes {
-              key: 1
-              value {
-                dim {
-                  size: 1
-                }
-              }
-            }
-            total_definition_count: 1
-          }
-          graph_nodes {
-            name: "sequential_1/batch_normalization_4_1/batchnorm/add_1"
+            name: "sequential_1/conv2d_3_1/BiasAdd"
             float_ops: 12544
             total_float_ops: 12544
             input_shapes {
@@ -1200,40 +761,114 @@ children {
               value {
                 dim {
                   size: 256
+                }
+              }
+            }
+            total_definition_count: 1
+          }
+          graph_nodes {
+            name: "sequential_1/dense_1/BiasAdd"
+            float_ops: 1024
+            total_float_ops: 1024
+            input_shapes {
+              key: 0
+              value {
+                dim {
+                  size: 1
+                }
+                dim {
+                  size: 1024
+                }
+              }
+            }
+            input_shapes {
+              key: 1
+              value {
+                dim {
+                  size: 1024
+                }
+              }
+            }
+            total_definition_count: 1
+          }
+          graph_nodes {
+            name: "sequential_1/dense_1_2/BiasAdd"
+            float_ops: 512
+            total_float_ops: 512
+            input_shapes {
+              key: 0
+              value {
+                dim {
+                  size: 1
+                }
+                dim {
+                  size: 512
+                }
+              }
+            }
+            input_shapes {
+              key: 1
+              value {
+                dim {
+                  size: 512
+                }
+              }
+            }
+            total_definition_count: 1
+          }
+          graph_nodes {
+            name: "sequential_1/dense_2_1/BiasAdd"
+            float_ops: 10
+            total_float_ops: 10
+            input_shapes {
+              key: 0
+              value {
+                dim {
+                  size: 1
+                }
+                dim {
+                  size: 10
+                }
+              }
+            }
+            input_shapes {
+              key: 1
+              value {
+                dim {
+                  size: 10
                 }
               }
             }
             total_definition_count: 1
           }
           children {
-            name: "MaxPool"
-            float_ops: 84480
-            total_float_ops: 87410
+            name: "AddV2"
+            float_ops: 63616
+            total_float_ops: 66354
             graph_nodes {
-              name: "sequential_1/max_pooling2d_1/MaxPool2d"
-              float_ops: 50176
-              total_float_ops: 50176
+              name: "sequential_1/batch_normalization_1/batchnorm/add"
+              float_ops: 128
+              total_float_ops: 128
               input_shapes {
                 key: 0
                 value {
                   dim {
+                    size: 128
+                  }
+                }
+              }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
                     size: 1
-                  }
-                  dim {
-                    size: 28
-                  }
-                  dim {
-                    size: 28
-                  }
-                  dim {
-                    size: 64
                   }
                 }
               }
               total_definition_count: 1
             }
             graph_nodes {
-              name: "sequential_1/max_pooling2d_1_2/MaxPool2d"
+              name: "sequential_1/batch_normalization_1/batchnorm/add_1"
               float_ops: 25088
               total_float_ops: 25088
               input_shapes {
@@ -1253,12 +888,42 @@ children {
                   }
                 }
               }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 128
+                  }
+                }
+              }
               total_definition_count: 1
             }
             graph_nodes {
-              name: "sequential_1/max_pooling2d_2_1/MaxPool2d"
-              float_ops: 9216
-              total_float_ops: 9216
+              name: "sequential_1/batch_normalization_1_2/batchnorm/add"
+              float_ops: 256
+              total_float_ops: 256
+              input_shapes {
+                key: 0
+                value {
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 1
+                  }
+                }
+              }
+              total_definition_count: 1
+            }
+            graph_nodes {
+              name: "sequential_1/batch_normalization_1_2/batchnorm/add_1"
+              float_ops: 12544
+              total_float_ops: 12544
               input_shapes {
                 key: 0
                 value {
@@ -1276,28 +941,128 @@ children {
                   }
                 }
               }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              total_definition_count: 1
+            }
+            graph_nodes {
+              name: "sequential_1/batch_normalization_2_1/batchnorm/add"
+              float_ops: 256
+              total_float_ops: 256
+              input_shapes {
+                key: 0
+                value {
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 1
+                  }
+                }
+              }
+              total_definition_count: 1
+            }
+            graph_nodes {
+              name: "sequential_1/batch_normalization_2_1/batchnorm/add_1"
+              float_ops: 12544
+              total_float_ops: 12544
+              input_shapes {
+                key: 0
+                value {
+                  dim {
+                    size: 1
+                  }
+                  dim {
+                    size: 7
+                  }
+                  dim {
+                    size: 7
+                  }
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              total_definition_count: 1
+            }
+            graph_nodes {
+              name: "sequential_1/batch_normalization_3_1/batchnorm/add"
+              float_ops: 256
+              total_float_ops: 256
+              input_shapes {
+                key: 0
+                value {
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 1
+                  }
+                }
+              }
+              total_definition_count: 1
+            }
+            graph_nodes {
+              name: "sequential_1/batch_normalization_3_1/batchnorm/add_1"
+              float_ops: 12544
+              total_float_ops: 12544
+              input_shapes {
+                key: 0
+                value {
+                  dim {
+                    size: 1
+                  }
+                  dim {
+                    size: 7
+                  }
+                  dim {
+                    size: 7
+                  }
+                  dim {
+                    size: 256
+                  }
+                }
+              }
+              input_shapes {
+                key: 1
+                value {
+                  dim {
+                    size: 256
+                  }
+                }
+              }
               total_definition_count: 1
             }
             children {
               name: "Rsqrt"
-              float_ops: 1920
-              total_float_ops: 2930
+              float_ops: 1792
+              total_float_ops: 2738
               graph_nodes {
                 name: "sequential_1/batch_normalization_1/batchnorm/Rsqrt"
-                float_ops: 128
-                total_float_ops: 128
-                input_shapes {
-                  key: 0
-                  value {
-                    dim {
-                      size: 64
-                    }
-                  }
-                }
-                total_definition_count: 1
-              }
-              graph_nodes {
-                name: "sequential_1/batch_normalization_1_2/batchnorm/Rsqrt"
                 float_ops: 256
                 total_float_ops: 256
                 input_shapes {
@@ -1305,6 +1070,20 @@ children {
                   value {
                     dim {
                       size: 128
+                    }
+                  }
+                }
+                total_definition_count: 1
+              }
+              graph_nodes {
+                name: "sequential_1/batch_normalization_1_2/batchnorm/Rsqrt"
+                float_ops: 512
+                total_float_ops: 512
+                input_shapes {
+                  key: 0
+                  value {
+                    dim {
+                      size: 256
                     }
                   }
                 }
@@ -1338,48 +1117,12 @@ children {
                 }
                 total_definition_count: 1
               }
-              graph_nodes {
-                name: "sequential_1/batch_normalization_4_1/batchnorm/Rsqrt"
-                float_ops: 512
-                total_float_ops: 512
-                input_shapes {
-                  key: 0
-                  value {
-                    dim {
-                      size: 256
-                    }
-                  }
-                }
-                total_definition_count: 1
-              }
               children {
                 name: "Sub"
-                float_ops: 960
-                total_float_ops: 1010
+                float_ops: 896
+                total_float_ops: 946
                 graph_nodes {
                   name: "sequential_1/batch_normalization_1/batchnorm/sub"
-                  float_ops: 64
-                  total_float_ops: 64
-                  input_shapes {
-                    key: 0
-                    value {
-                      dim {
-                        size: 64
-                      }
-                    }
-                  }
-                  input_shapes {
-                    key: 1
-                    value {
-                      dim {
-                        size: 64
-                      }
-                    }
-                  }
-                  total_definition_count: 1
-                }
-                graph_nodes {
-                  name: "sequential_1/batch_normalization_1_2/batchnorm/sub"
                   float_ops: 128
                   total_float_ops: 128
                   input_shapes {
@@ -1395,6 +1138,28 @@ children {
                     value {
                       dim {
                         size: 128
+                      }
+                    }
+                  }
+                  total_definition_count: 1
+                }
+                graph_nodes {
+                  name: "sequential_1/batch_normalization_1_2/batchnorm/sub"
+                  float_ops: 256
+                  total_float_ops: 256
+                  input_shapes {
+                    key: 0
+                    value {
+                      dim {
+                        size: 256
+                      }
+                    }
+                  }
+                  input_shapes {
+                    key: 1
+                    value {
+                      dim {
+                        size: 256
                       }
                     }
                   }
@@ -1424,28 +1189,6 @@ children {
                 }
                 graph_nodes {
                   name: "sequential_1/batch_normalization_3_1/batchnorm/sub"
-                  float_ops: 256
-                  total_float_ops: 256
-                  input_shapes {
-                    key: 0
-                    value {
-                      dim {
-                        size: 256
-                      }
-                    }
-                  }
-                  input_shapes {
-                    key: 1
-                    value {
-                      dim {
-                        size: 256
-                      }
-                    }
-                  }
-                  total_definition_count: 1
-                }
-                graph_nodes {
-                  name: "sequential_1/batch_normalization_4_1/batchnorm/sub"
                   float_ops: 256
                   total_float_ops: 256
                   input_shapes {
