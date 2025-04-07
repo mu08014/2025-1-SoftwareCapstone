@@ -199,6 +199,8 @@ class Quanv3x3LayerClass(tf.keras.layers.Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[:-1] + (self.channel_size,)
 
+'''
+Parameter-shift rule (근데 시간이 너무 오래 걸린다.)
 @tf.custom_gradient
 def quantum_layer(x, q_params):
     def forward_run(x_np, params_np):
@@ -237,6 +239,42 @@ def quantum_layer(x, q_params):
         return None, grads
 
     return y, grad_fn
+'''
+
+#SPSA 기법으로 근사적으로 계산
+@tf.custom_gradient
+def quantum_layer(x, q_params):
+    def forward_run(x_np, params_np):
+        return BatchQuanv3x3(x_np, params_np, channel_size=params_np.shape[0], shots=SHOTS)
+
+    y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
+
+    def grad_fn(dy):
+        shift = 0.01
+
+        def approx_grad(x_np, params_np, dy_np):
+            Delta = np.random.choice([-1.0, 1.0], size=params_np.shape)
+
+            param_plus = params_np + shift * Delta
+            param_minus = params_np - shift * Delta
+
+            y_plus = BatchQuanv3x3(x_np, param_plus, channel_size=param_plus.shape[0], shots=SHOTS)
+            y_minus = BatchQuanv3x3(x_np, param_minus, channel_size=param_minus.shape[0], shots=SHOTS)
+
+            partial = (y_plus - y_minus) / (2.0 * shift)
+
+            chain_mult = np.sum(dy_np * partial)  # scalar
+            grads_spsa = chain_mult * Delta  # shape=(channel_size, param_count)
+
+            return grads_spsa.astype(np.float32)
+
+        grads = tf.numpy_function(approx_grad, [x, q_params, dy], tf.float32)
+        grads = tf.reshape(grads, tf.shape(q_params))
+
+        return None, grads
+
+    return y, grad_fn
+
 
 def OneQLayerFourCLayer():
     model = Sequential()
