@@ -201,18 +201,42 @@ class Quanv3x3LayerClass(tf.keras.layers.Layer):
 
 @tf.custom_gradient
 def quantum_layer(x, q_params):
-    def run_quantum_circuit(x_np, params_np):
+    def forward_run(x_np, params_np):
         return BatchQuanv3x3(x_np, params_np, channel_size=params_np.shape[0], shots=SHOTS)
 
-    y = tf.numpy_function(run_quantum_circuit, [x, q_params], tf.float32)
+    y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
 
-    def grad(dy):
-        grad_params = np.ones_like(q_params.shape) * 0.01
-        grad_q_params = tf.reduce_mean(dy) * tf.ones_like(q_params, dtype=tf.float32)
-        return None, grad_q_params
+    def grad_fn(dy):
+        shift = np.pi / 2
 
-    return y, grad
+        def param_shift_grad(x_np, params_np, dy_np):
+            grads_np = np.zeros_like(params_np, dtype=np.float32)
 
+            flat_params = params_np.ravel()
+            for i in range(flat_params.size):
+                param_plus = flat_params.copy()
+                param_minus = flat_params.copy()
+
+                param_plus[i] += shift
+                param_minus[i] -= shift
+
+                param_plus = param_plus.reshape(params_np.shape)
+                param_minus = param_minus.reshape(params_np.shape)
+
+                y_plus = BatchQuanv3x3(x_np, param_plus, channel_size=param_plus.shape[0], shots=SHOTS)
+                y_minus = BatchQuanv3x3(x_np, param_minus, channel_size=param_minus.shape[0], shots=SHOTS)
+
+                partial_deriv = (y_plus - y_minus) / 2.0
+                grads_np.ravel()[i] = np.sum(dy_np * partial_deriv)
+
+            return grads_np
+
+        grads = tf.numpy_function(param_shift_grad, [x, q_params, dy], tf.float32)
+        grads = tf.reshape(grads, tf.shape(q_params))
+
+        return None, grads
+
+    return y, grad_fn
 
 def OneQLayerFourCLayer():
     model = Sequential()
