@@ -20,7 +20,7 @@ from tensorflow.keras.utils import plot_model
 from tensorflow.python.profiler import model_analyzer
 from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
-SHOTS = 256
+SHOTS = 128
 
 def Encoding2x2(qc: QuantumCircuit, data: list):
     for i in range(4):
@@ -155,7 +155,7 @@ def BatchQuanv2x2(data: np.array, params: np.array, channel_size: int, shots=SHO
         feat_stack = []
         for j in range(channel_size):
             feat_map = Quanv2x2Layer(avg_vals[i], params[j], stride=1, shots=shots)         #27x27
-            feat_map_uint8 = ((feat_map + 1) / 2 * 255).astype(np.float32)
+            feat_map_uint8 = ((feat_map + 1) / 2).astype(np.float32)
             feat_map_padded = np.pad(feat_map_uint8, pad_width=((0, 1), (0, 1)), mode='constant') #28x28
             feat_stack.append(feat_map_padded)                                              #channel_sizex28x28
         out.append(np.transpose(feat_stack, (1, 2, 0)))                                 #28x28xchannel_size
@@ -168,10 +168,10 @@ def BatchQuanv3x3(data: np.array, params: np.array, channel_size: int, shots=SHO
     out = []
     for i in range(B):
         feat_stack = []
+        print(f'{i}th Image is running...')
         for j in range(channel_size):
-            print(f'{i}th Image, {j}th kernel is running...')
             feat_map = Quanv3x3Layer(avg_vals[i], params[j], stride=1, shots=shots)         #26x26
-            feat_map_uint8 = ((feat_map + 1) / 2 * 255).astype(np.float32)
+            feat_map_uint8 = ((feat_map + 1) / 2).astype(np.float32)
             feat_map_padded = np.pad(feat_map_uint8, pad_width=1, mode='constant')          #28x28
             feat_stack.append(feat_map_padded)                                              #channel_sizex28x28
         out.append(np.transpose(feat_stack, (1, 2, 0)))                                 #28x28xchannel_size
@@ -243,12 +243,12 @@ def OneQLayerFourCLayer():
     return model
 
 def ModelCompile(model):
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     return model
 
-def Train(model, x_train, y_train):#, x_test, y_test):
+def Train(model, x_train, y_train, x_test, y_test):
     logger = LrLogger()
-    model.fit(x_train, y_train, epochs=3, verbose=1, callbacks=[logger])
+    model.fit(x_train, y_train, epochs=EPOCH, validation_data=(x_test, y_test), verbose=1, callbacks=[logger])
     epochs = range(1, len(logger.accuracy) + 1)
 
     # draw plot
@@ -271,7 +271,7 @@ def Train(model, x_train, y_train):#, x_test, y_test):
     def model_fn(x):
         return model(x)
 
-    input_tensor = tf.random.normal([1, 28, 28, 1])
+    input_tensor = tf.random.normal([1, 14, 14, 1])
     concrete_func = model_fn.get_concrete_function(input_tensor)
 
     profiler = model_analyzer.Profiler(graph=concrete_func.graph)
@@ -309,11 +309,9 @@ def Train(model, x_train, y_train):#, x_test, y_test):
 
 def ExTQCNN():
     x_train, y_train, x_test, y_test = PreProcessing()
-    x_dummy = tf.random.normal((4, 28, 28, 1))  # 예: 이미지 4장
-    y_dummy = tf.constant([[1.], [0.], [1.], [0.]])
     Model = OneQLayerFourCLayer()
     Model = ModelCompile(Model)
-    Train(Model, x_dummy, y_dummy)#, x_test, y_test)
+    Train(Model, x_train, y_train, x_test, y_test)
 
 
 

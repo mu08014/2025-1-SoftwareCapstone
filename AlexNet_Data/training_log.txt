@@ -1,44 +1,29 @@
-1000 MNIST Data size, 25 epochs
+500 MNIST Data size, 10 epochs
 
 Epoch	Accuracy	Loss
-1	0.26100000739097595	3.8930792808532715
-2	0.5230000019073486	1.4434421062469482
-3	0.7590000033378601	0.7334206700325012
-4	0.8539999723434448	0.44294172525405884
-5	0.9150000214576721	0.2526685893535614
-6	0.9430000185966492	0.1947108507156372
-7	0.9539999961853027	0.13891111314296722
-8	0.9710000157356262	0.09175781160593033
-9	0.9909999966621399	0.046657104045152664
-10	0.9769999980926514	0.06665638834238052
-11	0.9869999885559082	0.035594940185546875
-12	0.9850000143051147	0.04327361658215523
-13	0.9940000176429749	0.032567646354436874
-14	0.9869999885559082	0.043597571551799774
-15	0.9900000095367432	0.024672267958521843
-16	0.9959999918937683	0.011315188370645046
-17	0.9929999709129333	0.017296643927693367
-18	0.9909999966621399	0.029481561854481697
-19	0.9959999918937683	0.011037041433155537
-20	0.9950000047683716	0.014710992574691772
-21	0.9959999918937683	0.01710241660475731
-22	0.996999979019165	0.013707950711250305
-23	0.9980000257492065	0.0067430296912789345
-24	0.996999979019165	0.009701751172542572
-25	0.996999979019165	0.009497035294771194
+1	0.23000000417232513	2.612001895904541
+2	0.5460000038146973	1.3799611330032349
+3	0.7639999985694885	0.738641619682312
+4	0.8560000061988831	0.44450414180755615
+5	0.9100000262260437	0.2804669737815857
+6	0.9399999976158142	0.16096018254756927
+7	0.9660000205039978	0.10450343042612076
+8	0.9800000190734863	0.06111485883593559
+9	0.9879999756813049	0.029065264388918877
+10	0.9919999837875366	0.019320692867040634
 
-Max Parameter Count: 4443914
+Max Parameter Count: 2346762
 
 Total FLOPs : name: "_TFProfRoot"
-total_float_ops: 180519356
+total_float_ops: 35679036
 children {
   name: "Conv2D"
-  float_ops: 174311424
-  total_float_ops: 180519356
+  float_ops: 33993216
+  total_float_ops: 35679036
   graph_nodes {
     name: "sequential_1/conv2d_1/convolution"
-    float_ops: 903168
-    total_float_ops: 903168
+    float_ops: 225792
+    total_float_ops: 225792
     input_shapes {
       key: 0
       value {
@@ -46,10 +31,10 @@ children {
           size: 1
         }
         dim {
-          size: 28
+          size: 14
         }
         dim {
-          size: 28
+          size: 14
         }
         dim {
           size: 1
@@ -77,8 +62,8 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_1_2/convolution"
-    float_ops: 28901376
-    total_float_ops: 28901376
+    float_ops: 7225344
+    total_float_ops: 7225344
     input_shapes {
       key: 0
       value {
@@ -86,10 +71,10 @@ children {
           size: 1
         }
         dim {
-          size: 14
+          size: 7
         }
         dim {
-          size: 14
+          size: 7
         }
         dim {
           size: 64
@@ -117,8 +102,8 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_2_1/convolution"
-    float_ops: 28901376
-    total_float_ops: 28901376
+    float_ops: 5308416
+    total_float_ops: 5308416
     input_shapes {
       key: 0
       value {
@@ -126,10 +111,10 @@ children {
           size: 1
         }
         dim {
-          size: 7
+          size: 3
         }
         dim {
-          size: 7
+          size: 3
         }
         dim {
           size: 128
@@ -157,8 +142,8 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_3_1/convolution"
-    float_ops: 57802752
-    total_float_ops: 57802752
+    float_ops: 10616832
+    total_float_ops: 10616832
     input_shapes {
       key: 0
       value {
@@ -166,10 +151,10 @@ children {
           size: 1
         }
         dim {
-          size: 7
+          size: 3
         }
         dim {
-          size: 7
+          size: 3
         }
         dim {
           size: 256
@@ -197,8 +182,8 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_4_1/convolution"
-    float_ops: 57802752
-    total_float_ops: 57802752
+    float_ops: 10616832
+    total_float_ops: 10616832
     input_shapes {
       key: 0
       value {
@@ -206,10 +191,10 @@ children {
           size: 1
         }
         dim {
-          size: 7
+          size: 3
         }
         dim {
-          size: 7
+          size: 3
         }
         dim {
           size: 256
@@ -237,12 +222,12 @@ children {
   }
   children {
     name: "MatMul"
-    float_ops: 5777408
-    total_float_ops: 6207932
+    float_ops: 1583104
+    total_float_ops: 1685820
     graph_nodes {
       name: "sequential_1/dense_1/MatMul"
-      float_ops: 4718592
-      total_float_ops: 4718592
+      float_ops: 524288
+      total_float_ops: 524288
       input_shapes {
         key: 0
         value {
@@ -250,7 +235,7 @@ children {
             size: 1
           }
           dim {
-            size: 2304
+            size: 256
           }
         }
       }
@@ -258,7 +243,7 @@ children {
         key: 1
         value {
           dim {
-            size: 2304
+            size: 256
           }
           dim {
             size: 1024
@@ -325,8 +310,8 @@ children {
     }
     children {
       name: "Mul"
-      float_ops: 114816
-      total_float_ops: 430524
+      float_ops: 27648
+      total_float_ops: 102716
       graph_nodes {
         name: "sequential_1/batch_normalization_1/batchnorm/mul"
         float_ops: 64
@@ -351,8 +336,8 @@ children {
       }
       graph_nodes {
         name: "sequential_1/batch_normalization_1/batchnorm/mul_1"
-        float_ops: 50176
-        total_float_ops: 50176
+        float_ops: 12544
+        total_float_ops: 12544
         input_shapes {
           key: 0
           value {
@@ -360,10 +345,10 @@ children {
               size: 1
             }
             dim {
-              size: 28
+              size: 14
             }
             dim {
-              size: 28
+              size: 14
             }
             dim {
               size: 64
@@ -426,8 +411,8 @@ children {
       }
       graph_nodes {
         name: "sequential_1/batch_normalization_1_2/batchnorm/mul_1"
-        float_ops: 25088
-        total_float_ops: 25088
+        float_ops: 6272
+        total_float_ops: 6272
         input_shapes {
           key: 0
           value {
@@ -435,10 +420,10 @@ children {
               size: 1
             }
             dim {
-              size: 14
+              size: 7
             }
             dim {
-              size: 14
+              size: 7
             }
             dim {
               size: 128
@@ -501,8 +486,8 @@ children {
       }
       graph_nodes {
         name: "sequential_1/batch_normalization_2_1/batchnorm/mul_1"
-        float_ops: 12544
-        total_float_ops: 12544
+        float_ops: 2304
+        total_float_ops: 2304
         input_shapes {
           key: 0
           value {
@@ -510,10 +495,10 @@ children {
               size: 1
             }
             dim {
-              size: 7
+              size: 3
             }
             dim {
-              size: 7
+              size: 3
             }
             dim {
               size: 256
@@ -576,8 +561,8 @@ children {
       }
       graph_nodes {
         name: "sequential_1/batch_normalization_3_1/batchnorm/mul_1"
-        float_ops: 12544
-        total_float_ops: 12544
+        float_ops: 2304
+        total_float_ops: 2304
         input_shapes {
           key: 0
           value {
@@ -585,10 +570,10 @@ children {
               size: 1
             }
             dim {
-              size: 7
+              size: 3
             }
             dim {
-              size: 7
+              size: 3
             }
             dim {
               size: 256
@@ -651,8 +636,8 @@ children {
       }
       graph_nodes {
         name: "sequential_1/batch_normalization_4_1/batchnorm/mul_1"
-        float_ops: 12544
-        total_float_ops: 12544
+        float_ops: 2304
+        total_float_ops: 2304
         input_shapes {
           key: 0
           value {
@@ -660,10 +645,10 @@ children {
               size: 1
             }
             dim {
-              size: 7
+              size: 3
             }
             dim {
-              size: 7
+              size: 3
             }
             dim {
               size: 256
@@ -704,12 +689,12 @@ children {
       }
       children {
         name: "BiasAdd"
-        float_ops: 114442
-        total_float_ops: 315708
+        float_ops: 27274
+        total_float_ops: 75068
         graph_nodes {
           name: "sequential_1/conv2d_1/BiasAdd"
-          float_ops: 50176
-          total_float_ops: 50176
+          float_ops: 12544
+          total_float_ops: 12544
           input_shapes {
             key: 0
             value {
@@ -717,10 +702,10 @@ children {
                 size: 1
               }
               dim {
-                size: 28
+                size: 14
               }
               dim {
-                size: 28
+                size: 14
               }
               dim {
                 size: 64
@@ -739,8 +724,8 @@ children {
         }
         graph_nodes {
           name: "sequential_1/conv2d_1_2/BiasAdd"
-          float_ops: 25088
-          total_float_ops: 25088
+          float_ops: 6272
+          total_float_ops: 6272
           input_shapes {
             key: 0
             value {
@@ -748,10 +733,10 @@ children {
                 size: 1
               }
               dim {
-                size: 14
+                size: 7
               }
               dim {
-                size: 14
+                size: 7
               }
               dim {
                 size: 128
@@ -770,8 +755,8 @@ children {
         }
         graph_nodes {
           name: "sequential_1/conv2d_2_1/BiasAdd"
-          float_ops: 12544
-          total_float_ops: 12544
+          float_ops: 2304
+          total_float_ops: 2304
           input_shapes {
             key: 0
             value {
@@ -779,10 +764,10 @@ children {
                 size: 1
               }
               dim {
-                size: 7
+                size: 3
               }
               dim {
-                size: 7
+                size: 3
               }
               dim {
                 size: 256
@@ -801,8 +786,8 @@ children {
         }
         graph_nodes {
           name: "sequential_1/conv2d_3_1/BiasAdd"
-          float_ops: 12544
-          total_float_ops: 12544
+          float_ops: 2304
+          total_float_ops: 2304
           input_shapes {
             key: 0
             value {
@@ -810,10 +795,10 @@ children {
                 size: 1
               }
               dim {
-                size: 7
+                size: 3
               }
               dim {
-                size: 7
+                size: 3
               }
               dim {
                 size: 256
@@ -832,8 +817,8 @@ children {
         }
         graph_nodes {
           name: "sequential_1/conv2d_4_1/BiasAdd"
-          float_ops: 12544
-          total_float_ops: 12544
+          float_ops: 2304
+          total_float_ops: 2304
           input_shapes {
             key: 0
             value {
@@ -841,10 +826,10 @@ children {
                 size: 1
               }
               dim {
-                size: 7
+                size: 3
               }
               dim {
-                size: 7
+                size: 3
               }
               dim {
                 size: 256
@@ -938,8 +923,8 @@ children {
         }
         children {
           name: "AddV2"
-          float_ops: 113856
-          total_float_ops: 201266
+          float_ops: 26688
+          total_float_ops: 47794
           graph_nodes {
             name: "sequential_1/batch_normalization_1/batchnorm/add"
             float_ops: 64
@@ -964,8 +949,8 @@ children {
           }
           graph_nodes {
             name: "sequential_1/batch_normalization_1/batchnorm/add_1"
-            float_ops: 50176
-            total_float_ops: 50176
+            float_ops: 12544
+            total_float_ops: 12544
             input_shapes {
               key: 0
               value {
@@ -973,10 +958,10 @@ children {
                   size: 1
                 }
                 dim {
-                  size: 28
+                  size: 14
                 }
                 dim {
-                  size: 28
+                  size: 14
                 }
                 dim {
                   size: 64
@@ -1017,8 +1002,8 @@ children {
           }
           graph_nodes {
             name: "sequential_1/batch_normalization_1_2/batchnorm/add_1"
-            float_ops: 25088
-            total_float_ops: 25088
+            float_ops: 6272
+            total_float_ops: 6272
             input_shapes {
               key: 0
               value {
@@ -1026,10 +1011,10 @@ children {
                   size: 1
                 }
                 dim {
-                  size: 14
+                  size: 7
                 }
                 dim {
-                  size: 14
+                  size: 7
                 }
                 dim {
                   size: 128
@@ -1070,8 +1055,8 @@ children {
           }
           graph_nodes {
             name: "sequential_1/batch_normalization_2_1/batchnorm/add_1"
-            float_ops: 12544
-            total_float_ops: 12544
+            float_ops: 2304
+            total_float_ops: 2304
             input_shapes {
               key: 0
               value {
@@ -1079,10 +1064,10 @@ children {
                   size: 1
                 }
                 dim {
-                  size: 7
+                  size: 3
                 }
                 dim {
-                  size: 7
+                  size: 3
                 }
                 dim {
                   size: 256
@@ -1123,8 +1108,8 @@ children {
           }
           graph_nodes {
             name: "sequential_1/batch_normalization_3_1/batchnorm/add_1"
-            float_ops: 12544
-            total_float_ops: 12544
+            float_ops: 2304
+            total_float_ops: 2304
             input_shapes {
               key: 0
               value {
@@ -1132,10 +1117,10 @@ children {
                   size: 1
                 }
                 dim {
-                  size: 7
+                  size: 3
                 }
                 dim {
-                  size: 7
+                  size: 3
                 }
                 dim {
                   size: 256
@@ -1176,8 +1161,8 @@ children {
           }
           graph_nodes {
             name: "sequential_1/batch_normalization_4_1/batchnorm/add_1"
-            float_ops: 12544
-            total_float_ops: 12544
+            float_ops: 2304
+            total_float_ops: 2304
             input_shapes {
               key: 0
               value {
@@ -1185,10 +1170,10 @@ children {
                   size: 1
                 }
                 dim {
-                  size: 7
+                  size: 3
                 }
                 dim {
-                  size: 7
+                  size: 3
                 }
                 dim {
                   size: 256
@@ -1207,12 +1192,12 @@ children {
           }
           children {
             name: "MaxPool"
-            float_ops: 84480
-            total_float_ops: 87410
+            float_ops: 18176
+            total_float_ops: 21106
             graph_nodes {
               name: "sequential_1/max_pooling2d_1/MaxPool2d"
-              float_ops: 50176
-              total_float_ops: 50176
+              float_ops: 12544
+              total_float_ops: 12544
               input_shapes {
                 key: 0
                 value {
@@ -1220,10 +1205,10 @@ children {
                     size: 1
                   }
                   dim {
-                    size: 28
+                    size: 14
                   }
                   dim {
-                    size: 28
+                    size: 14
                   }
                   dim {
                     size: 64
@@ -1234,8 +1219,8 @@ children {
             }
             graph_nodes {
               name: "sequential_1/max_pooling2d_1_2/MaxPool2d"
-              float_ops: 25088
-              total_float_ops: 25088
+              float_ops: 4608
+              total_float_ops: 4608
               input_shapes {
                 key: 0
                 value {
@@ -1243,10 +1228,10 @@ children {
                     size: 1
                   }
                   dim {
-                    size: 14
+                    size: 7
                   }
                   dim {
-                    size: 14
+                    size: 7
                   }
                   dim {
                     size: 128
@@ -1257,8 +1242,8 @@ children {
             }
             graph_nodes {
               name: "sequential_1/max_pooling2d_2_1/MaxPool2d"
-              float_ops: 9216
-              total_float_ops: 9216
+              float_ops: 1024
+              total_float_ops: 1024
               input_shapes {
                 key: 0
                 value {
@@ -1266,10 +1251,10 @@ children {
                     size: 1
                   }
                   dim {
-                    size: 7
+                    size: 3
                   }
                   dim {
-                    size: 7
+                    size: 3
                   }
                   dim {
                     size: 256

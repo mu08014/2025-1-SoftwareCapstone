@@ -12,8 +12,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-MNIST_data_size = 1000
-EPOCH = 25
+MNIST_data_size = 500
+EPOCH = 10
 
 
 def PreProcessing():
@@ -27,6 +27,10 @@ def PreProcessing():
     x_train = x_train.reshape(-1, 28, 28, 1).astype('float32') / 255.0
     x_test = x_test.reshape(-1, 28, 28, 1).astype('float32') / 255.0
 
+    #image Average Pooling
+    x_train = tf.image.resize(x_train, [14, 14], method='bilinear')
+    x_test = tf.image.resize(x_test, [14, 14], method='bilinear')
+
     y_train = to_categorical(y_train, 10)
     y_test = to_categorical(y_test, 10)
     
@@ -37,7 +41,7 @@ def AlexNet():
 
     # Conv Layer
     model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same',
-                     input_shape=(28, 28, 1)))
+                     input_shape=(14, 14, 1)))
     model.add(BatchNormalization())
     model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
 
@@ -94,7 +98,7 @@ def Train(model, x_train, y_train, x_test, y_test):
     def model_fn(x):
         return model(x)
 
-    input_tensor = tf.random.normal([1, 28, 28, 1])
+    input_tensor = tf.random.normal([1, 14, 14, 1])
     concrete_func = model_fn.get_concrete_function(input_tensor)
 
     profiler = model_analyzer.Profiler(graph=concrete_func.graph)
