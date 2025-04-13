@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 MNIST_data_size = 500
+TEST_data_size = 1000
 EPOCH = 10
 
 
@@ -20,20 +21,21 @@ def PreProcessing():
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
     indices = np.random.permutation(len(x_train))[:MNIST_data_size]
-
     x_train = x_train[indices]
     y_train = y_train[indices]
+
+    x_test = x_test[:TEST_data_size]
+    y_test = y_test[:TEST_data_size]
 
     x_train = x_train.reshape(-1, 28, 28, 1).astype('float32') / 255.0
     x_test = x_test.reshape(-1, 28, 28, 1).astype('float32') / 255.0
 
-    #image Average Pooling
     x_train = tf.image.resize(x_train, [14, 14], method='bilinear')
     x_test = tf.image.resize(x_test, [14, 14], method='bilinear')
 
     y_train = to_categorical(y_train, 10)
     y_test = to_categorical(y_test, 10)
-    
+
     return x_train, y_train, x_test, y_test
 
 def AlexNet():

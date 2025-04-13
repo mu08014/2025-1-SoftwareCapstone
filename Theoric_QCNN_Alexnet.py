@@ -20,33 +20,10 @@ from tensorflow.keras.utils import plot_model
 from tensorflow.python.profiler import model_analyzer
 from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
+os.environ["OMP_NUM_THREADS"] = "8"
+
 SHOTS = 128
 
-def Encoding2x2(qc: QuantumCircuit, data: list):
-    for i in range(4):
-        qc.rx(2*np.pi*data[i]-np.pi, i)
-    return qc
-
-def Ansatz2x2(qc: QuantumCircuit, train_theta: list):
-    #depth : 2 x log(4)
-    qc.crz(train_theta[0], 1, 0)
-    qc.crx(train_theta[1], 1, 0)
-    qc.crz(train_theta[2], 3, 2)
-    qc.crx(train_theta[3], 3, 2)
-    qc.crz(train_theta[4], 2, 0)
-    qc.crx(train_theta[5], 2, 0)
-
-    return qc
-
-def Quanv2x2LayerCircuit(input_data: list, train_theta: list, shots=SHOTS):
-    qc = QuantumCircuit(4, 1)
-    qc = Encoding2x2(qc, input_data)
-    qc = Ansatz2x2(qc, train_theta)
-    qc.measure(0, 0)
-
-    avgZ = QuanvAerMeasure(qc, shots)
-
-    return avgZ
 
 def Encoding3x3(qc: QuantumCircuit, data: np.array):
     for i in range(9):
@@ -77,52 +54,24 @@ def Ansatz3x3(qc: QuantumCircuit, train_theta: np.array):
 
     return qc
 
-def Quanv3x3LayerCircuit(input_data: np.array, train_theta: np.array, shots=SHOTS):
+def Quanv3x3LayerCircuit(input_data: np.array, train_theta: np.array):
     qc = QuantumCircuit(9, 1)
     qc = Encoding3x3(qc, input_data)
     qc = Ansatz3x3(qc, train_theta)
     qc.measure(0, 0)
 
-    avgZ = QuanvAerMeasure(qc, shots)
-
     #회로 그림 알고싶을 때 주석 제거
     #qc.draw('mpl')
     #plt.show()
 
-    return avgZ
+    return qc
 
-def QuanvAerMeasure(qc: QuantumCircuit, shots=SHOTS):
-    backend = Aer.get_backend(name='aer_simulator')
-    counts = backend.run(qc, shots=shots).result().get_counts()
+def QuanvAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
+    backend = Aer.get_backend("aer_simulator", device="GPU")
+    transpiled = transpile(qc, backend)
+    results = backend.run(transpiled, shots=SHOTS).result()
 
-    #Measure data 알고 싶을 때 주석 제거
-    #plot_histogram(counts)
-    #plt.show()
-
-    val0 = counts.get('0', 0)
-    val1 = counts.get('1', 0)
-
-    return (val0 - val1) / SHOTS # <Z> expectation value
-
-def Quanv2x2Layer(data: np.array, params: np.array, stride: int, shots=SHOTS):
-    #파라미터 수 확인
-    if len(params) != 6:
-        return False
-    #stride가 적절한지 확인
-    if (len(data) - 2) % stride != 0 or (len(data[0]) - 2) % stride != 0:
-        return False
-
-    feat_map = np.zeros((int((len(data) - 2) / stride) + 1, int((len(data[0]) - 2) / stride) + 1), dtype=np.float32)
-    idx_r = 0
-    for r in range(0, len(data), stride):
-        idx_c = 0
-        for c in range(0, len(data[0]), stride):
-            patch = data[r:r + 2, c:c + 2].flatten()
-            avgZ = Quanv2x2LayerCircuit(patch, params)
-            feat_map[idx_r, idx_c] = avgZ
-            idx_c += 1
-        idx_r += 1
-    return feat_map
+    return results
 
 def Quanv3x3Layer(data: np.array, params: np.array, stride: int, shots=SHOTS):
     # 파라미터 수 확인
@@ -135,31 +84,26 @@ def Quanv3x3Layer(data: np.array, params: np.array, stride: int, shots=SHOTS):
     fx = int((len(data) - 3) / stride) + 1
     fy = int((len(data[0]) - 3) / stride) + 1
     feat_map = np.zeros((fx, fy), dtype=np.float32)
-    idx_r = 0
-    for r in range(0, fx, stride):
-        idx_c = 0
-        for c in range(0, fy, stride):
+
+    circuits = []
+    patches = []
+
+    for r in range(0, fx * stride, stride):
+        for c in range(0, fy * stride, stride):
             patch = data[r:r + 3, c:c + 3].flatten()
-            avgZ = Quanv3x3LayerCircuit(patch, params)
-            feat_map[idx_r, idx_c] = avgZ
-            idx_c += 1
-        idx_r += 1
+            patches.append((r // stride, c // stride))
+
+            circuits.append(Quanv3x3LayerCircuit(patch, params))
+
+    results = QuanvAerMeasure(circuits, shots=SHOTS)
+
+    for i, (x, y) in enumerate(patches):
+        counts = results.get_counts(i)
+        p0 = counts.get('0', 0) / shots
+        p1 = counts.get('1', 0) / shots
+        feat_map[x, y] = p0 - p1
+
     return feat_map
-
-def BatchQuanv2x2(data: np.array, params: np.array, channel_size: int, shots=SHOTS):
-    B = len(data)                       #Bx28x28xk
-    avg_vals = np.mean(data, axis=-1)   #Bx28x28
-
-    out = []
-    for i in range(B):
-        feat_stack = []
-        for j in range(channel_size):
-            feat_map = Quanv2x2Layer(avg_vals[i], params[j], stride=1, shots=shots)         #27x27
-            feat_map_uint8 = ((feat_map + 1) / 2).astype(np.float32)
-            feat_map_padded = np.pad(feat_map_uint8, pad_width=((0, 1), (0, 1)), mode='constant') #28x28
-            feat_stack.append(feat_map_padded)                                              #channel_sizex28x28
-        out.append(np.transpose(feat_stack, (1, 2, 0)))                                 #28x28xchannel_size
-    return np.stack(out, axis=0)                                                            #Bxchannel_sizex28x28
 
 def BatchQuanv3x3(data: np.array, params: np.array, channel_size: int, shots=SHOTS):
     B = len(data)                       #Bx28x28xk
@@ -176,6 +120,43 @@ def BatchQuanv3x3(data: np.array, params: np.array, channel_size: int, shots=SHO
             feat_stack.append(feat_map_padded)                                              #channel_sizex28x28
         out.append(np.transpose(feat_stack, (1, 2, 0)))                                 #28x28xchannel_size
     return np.stack(out, axis=0)                                                            #Bxchannel_sizex28x28
+
+def FastQuanv3x3(data: np.array, params: np.array, channel_size: int, stride=1, shots=SHOTS, chunk_size=5000):
+    B = len(data)
+    avg_vals = np.mean(data, axis=-1)
+    H, W = avg_vals.shape[1], avg_vals.shape[2]
+
+    circuits = []
+    patch_meta = []  # (b, c, r, y)
+
+    fx = int((H - 3) / stride) + 1
+    fy = int((W - 3) / stride) + 1
+
+    for b in range(B):
+        print(f'{b}th Image is running...')
+        for c in range(channel_size):
+            for r in range(fx):
+                for y in range(fy):
+                    patch = avg_vals[b][r:r+3, y:y+3].flatten()
+                    circuits.append(Quanv3x3LayerCircuit(patch, params[c]))
+                    patch_meta.append((b, c, r, y))
+
+    out = np.zeros((B, H, W, channel_size), dtype=np.float32)
+
+    for i in range(0, len(circuits), chunk_size):
+        circ_chunk = circuits[i:i+chunk_size]
+        meta_chunk = patch_meta[i:i+chunk_size]
+
+        results = QuanvAerMeasure(circ_chunk, shots=SHOTS)
+
+        for j, (b, c, r, y) in enumerate(meta_chunk):
+            counts = results.get_counts(j)
+            p0 = counts.get('0', 0) / shots
+            p1 = counts.get('1', 0) / shots
+            avgZ = (p0 - p1 + 1) / 2
+            out[b, r + 1, y + 1, c] = avgZ
+
+    return out
 
 def MakeQParams(channel_size: int, param_count: int):
     return np.random.uniform(-math.pi, math.pi, size=(channel_size, param_count))
@@ -245,7 +226,7 @@ def quantum_layer(x, q_params):
 @tf.custom_gradient
 def quantum_layer(x, q_params):
     def forward_run(x_np, params_np):
-        return BatchQuanv3x3(x_np, params_np, channel_size=params_np.shape[0], shots=SHOTS)
+        return FastQuanv3x3(x_np, params_np, channel_size=params_np.shape[0], shots=SHOTS)
 
     y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
 
@@ -258,8 +239,8 @@ def quantum_layer(x, q_params):
             param_plus = params_np + shift * Delta
             param_minus = params_np - shift * Delta
 
-            y_plus = BatchQuanv3x3(x_np, param_plus, channel_size=param_plus.shape[0], shots=SHOTS)
-            y_minus = BatchQuanv3x3(x_np, param_minus, channel_size=param_minus.shape[0], shots=SHOTS)
+            y_plus = FastQuanv3x3(x_np, param_plus, channel_size=param_plus.shape[0], shots=SHOTS)
+            y_minus = FastQuanv3x3(x_np, param_minus, channel_size=param_minus.shape[0], shots=SHOTS)
 
             partial = (y_plus - y_minus) / (2.0 * shift)
 
