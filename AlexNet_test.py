@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 MNIST_data_size = 500
-TEST_data_size = 1000
+TEST_data_size = 150
 EPOCH = 10
 
 

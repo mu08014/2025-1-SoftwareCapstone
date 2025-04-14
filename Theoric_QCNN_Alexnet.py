@@ -4,7 +4,7 @@ from AlexNet_test import PreProcessing
 from AlexNet_test import LrLogger
 from AlexNet_test import MNIST_data_size
 from qiskit.visualization import plot_histogram
-from qiskit_aer import Aer
+from qiskit_aer import AerSimulator
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +19,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropou
 from tensorflow.keras.utils import plot_model
 from tensorflow.python.profiler import model_analyzer
 from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
+from concurrent.futures import ThreadPoolExecutor
 
 os.environ["OMP_NUM_THREADS"] = "8"
 
@@ -27,7 +28,8 @@ SHOTS = 128
 
 def Encoding3x3(qc: QuantumCircuit, data: np.array):
     for i in range(9):
-        qc.rx(2*np.pi*data[i]-np.pi, i)
+        angle = np.pi * data[i]
+        qc.rx(angle, i)
     return qc
 
 def Ansatz3x3(qc: QuantumCircuit, train_theta: np.array):
@@ -67,9 +69,18 @@ def Quanv3x3LayerCircuit(input_data: np.array, train_theta: np.array):
     return qc
 
 def QuanvAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
-    backend = Aer.get_backend("aer_simulator", device="GPU")
+    #backend = AerSimulator()
+    #transpiled = transpile(qc, backend)
+    #results = backend.run(transpiled, shots=SHOTS).result()
+    
+    #멀티스레딩
+    backend = AerSimulator(method='statevector',
+                            max_parallel_threads=8,
+                            max_parallel_experiments=8,
+                            max_parallel_shots=1)
+
     transpiled = transpile(qc, backend)
-    results = backend.run(transpiled, shots=SHOTS).result()
+    results = backend.run(transpiled, shots=shots).result()
 
     return results
 
@@ -133,7 +144,6 @@ def FastQuanv3x3(data: np.array, params: np.array, channel_size: int, stride=1, 
     fy = int((W - 3) / stride) + 1
 
     for b in range(B):
-        print(f'{b}th Image is running...')
         for c in range(channel_size):
             for r in range(fx):
                 for y in range(fy):
@@ -142,8 +152,9 @@ def FastQuanv3x3(data: np.array, params: np.array, channel_size: int, stride=1, 
                     patch_meta.append((b, c, r, y))
 
     out = np.zeros((B, H, W, channel_size), dtype=np.float32)
-
+    print(len(circuits))
     for i in range(0, len(circuits), chunk_size):
+        print(f'{i}th Chunk is running...')
         circ_chunk = circuits[i:i+chunk_size]
         meta_chunk = patch_meta[i:i+chunk_size]
 
