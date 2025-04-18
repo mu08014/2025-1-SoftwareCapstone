@@ -2,6 +2,7 @@ from qiskit import *
 from AlexNet_test import EPOCH
 from AlexNet_test import PreProcessing
 from AlexNet_test import LrLogger
+from AlexNet_test import ClasswiseAccuracyLogger
 from AlexNet_test import MNIST_data_size
 from qiskit.visualization import plot_histogram
 from qiskit_aer import AerSimulator
@@ -24,7 +25,6 @@ from concurrent.futures import ThreadPoolExecutor
 os.environ["OMP_NUM_THREADS"] = "8"
 
 SHOTS = 128
-
 
 def Encoding3x3(qc: QuantumCircuit, data: np.array):
     for i in range(9):
@@ -292,7 +292,7 @@ def OneQLayerFourCLayer():
     model.add(Dropout(0.5))
     model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(10, activation='softmax'))
+    model.add(Dense(5, activation='softmax'))
 
     return model
 
@@ -304,21 +304,7 @@ def Train(model, x_train, y_train, x_test, y_test):
     logger = LrLogger()
     model.fit(x_train, y_train, epochs=EPOCH, validation_data=(x_test, y_test), verbose=1, callbacks=[logger])
     epochs = range(1, len(logger.accuracy) + 1)
-
-    # draw plot
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, logger.accuracy, marker='o')
-    plt.title("Accuracy per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, logger.loss, marker='o')
-    plt.title("Loss per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-
-    plt.tight_layout()
+    classwise_logger = ClasswiseAccuracyLogger(x_train, y_train, x_test, y_test)
 
     # cal FLOPs
     @tf.function
@@ -339,17 +325,80 @@ def Train(model, x_train, y_train, x_test, y_test):
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
+    # draw plot
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, logger.accuracy, marker='o')
+    plt.title("Train Accuracy per Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, logger.loss, marker='o')
+    plt.title("Train Loss per Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.tight_layout()
+
     graph_path = os.path.join(save_dir, 'training_graph.png')
     plt.savefig(graph_path)
 
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, logger.val_accuracy, marker='o', color='tab:orange')
+    plt.title("Test Accuracy per Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Test Accuracy")
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, logger.val_loss, marker='o', color='tab:red')
+    plt.title("Test Loss per Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Test Loss")
+    plt.tight_layout()
+
+    test_graph_path = os.path.join(save_dir, 'test_graph.png')
+    plt.savefig(test_graph_path)
+
     log_path = os.path.join(save_dir, 'training_log.txt')
     model_path = os.path.join(save_dir, 'model.png')
+
+    num_classes = y_test.shape[1]
+
+    plt.figure()
+    for cls in range(num_classes):
+        plt.plot(epochs, classwise_logger.test_class_accuracies[cls], marker='o', label=f'Class {cls}')
+    plt.title("Test Class-wise Accuracy per Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    test_class_graph_path = os.path.join(save_dir, 'test_classwise_accuracy_graph.png')
+    plt.savefig(test_class_graph_path)
+
+    plt.figure()
+    for cls in range(num_classes):
+        plt.plot(epochs, classwise_logger.train_class_accuracies[cls], marker='o', label=f'Class {cls}')
+    plt.title("Train Class-wise Accuracy per Epoch")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    train_class_graph_path = os.path.join(save_dir, 'train_classwise_accuracy_graph.png')
+    plt.savefig(train_class_graph_path)
 
     with open(log_path, 'w') as f:
         f.write(f"{MNIST_data_size} MNIST Data size, {EPOCH} epochs\n\n")
         f.write("Epoch\tAccuracy\tLoss\n")
         for i in range(len(epochs)):
             f.write(f"{epochs[i]}\t{logger.accuracy[i]}\t{logger.loss[i]}\n")
+
+        f.write("\nTrain Class-wise Accuracy per Epoch:\n")
+        for cls in range(num_classes):
+            f.write(f"Class {cls}: {classwise_logger.train_class_accuracies[cls]}\n")
+
+        f.write("\nTest Class-wise Accuracy per Epoch:\n")
+        for cls in range(num_classes):
+            f.write(f"Class {cls}: {classwise_logger.test_class_accuracies[cls]}\n")
+
         f.write(f"\nMax Parameter Count: {logger.params}\n")
         f.write(f"\nTotal FLOPs : {FLOPs}\n")
 
