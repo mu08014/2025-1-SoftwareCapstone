@@ -132,7 +132,7 @@ class ClasswiseAccuracyLogger(tf.keras.callbacks.Callback):
             self.train_class_accuracies[cls].append(train_acc)
             self.test_class_accuracies[cls].append(test_acc)
 
-def Train(model, x_train, y_train, x_test, y_test):
+def Train(model, x_train, y_train, x_test, y_test, save_dir='AlexNet_Data'):
     logger = LrLogger()
     classwise_logger = ClasswiseAccuracyLogger(x_train, y_train, x_test, y_test)
 
@@ -159,9 +159,11 @@ def Train(model, x_train, y_train, x_test, y_test):
 
     FLOPs = profiler.profile_operations(options=opts)
 
-    save_dir = 'AlexNet_Data'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+    
+    model_graph_path = os.path.join(save_dir, 'model.png')
+    plot_model(model, to_file=model_graph_path,show_shapes=True,show_layer_names=True,dpi=96)
 
     plt.figure(figsize=(10, 4))
     plt.subplot(1, 2, 1)
@@ -244,8 +246,6 @@ def Train(model, x_train, y_train, x_test, y_test):
 
     print("예측된 클래스 분포:", np.bincount(pred_test))
     print("실제 정답 클래스 분포:", np.bincount(true_test))
-
-
 
 class LrLogger(tf.keras.callbacks.Callback):
     def on_train_begin(self, logs=None):

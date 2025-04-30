@@ -22,8 +22,6 @@ from tensorflow.python.profiler import model_analyzer
 from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 from concurrent.futures import ThreadPoolExecutor
 
-os.environ["OMP_NUM_THREADS"] = "8"
-
 SHOTS = 128
 
 def Encoding3x3(qc: QuantumCircuit, data: np.array):
@@ -78,6 +76,14 @@ def QuanvAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
                             max_parallel_threads=8,
                             max_parallel_experiments=8,
                             max_parallel_shots=1)
+
+    transpiled = transpile(qc, backend)
+    results = backend.run(transpiled, shots=shots).result()
+
+    return results
+
+def QuanvGPUAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
+    backend = AerSimulator(method='statevector', device='GPU')
 
     transpiled = transpile(qc, backend)
     results = backend.run(transpiled, shots=shots).result()
@@ -158,7 +164,9 @@ def FastQuanv3x3(data: np.array, params: np.array, channel_size: int, stride=1, 
         circ_chunk = circuits[i:i+chunk_size]
         meta_chunk = patch_meta[i:i+chunk_size]
 
-        results = QuanvAerMeasure(circ_chunk, shots=SHOTS)
+        #results = QuanvAerMeasure(circ_chunk, shots=SHOTS)
+        #GPU 교체
+        results = QuanvGPUAerMeasure(circ_chunk, shots=shots)
 
         for j, (b, c, r, y) in enumerate(meta_chunk):
             counts = results.get_counts(j)
@@ -168,6 +176,45 @@ def FastQuanv3x3(data: np.array, params: np.array, channel_size: int, stride=1, 
             out[b, r + 1, y + 1, c] = avgZ
 
     return out
+
+def FastQuanv3x3_Multi(data: np.ndarray, params: np.ndarray, stride: int = 1, shots: int=SHOTS,chunk_size: int = 5000) -> np.ndarray:
+    B, H, W, C_in = data.shape
+    n_kernels     = params.shape[0]
+
+    fx = (H - 3) // stride + 1   # 패치 개수(행)
+    fy = (W - 3) // stride + 1   # 패치 개수(열)
+
+    circuits, patch_meta = [], []
+
+    for b in range(B):
+        for r in range(fx):
+            for y in range(fy):
+                patch = data[b,r*stride:r*stride + 3,y*stride:y*stride + 3,:].flatten()
+
+                for k in range(n_kernels):
+                    circuits.append(Quanv3x3LayerCircuit(patch, params[k]))
+                    patch_meta.append((b, r, y, k))   # (배치, 행, 열, 커널)
+
+    out = np.zeros((B, H, W, n_kernels), dtype=np.float32)
+    total = len(circuits)
+    for i in range(0, total, chunk_size):
+        circ_chunk = circuits[i:i+chunk_size]
+        meta_chunk = patch_meta[i:i+chunk_size]
+
+        print(f'[{i:>6}/{total}] running on GPU…')
+        results = QuanvGPUAerMeasure(circ_chunk, shots=shots)
+
+        #print(f'[{i:>6}/{total}] running on CPU…')
+        #results = QuanvAerMeasure(circ_chunk, shots=shots)
+
+        for j, (b, r, y, k) in enumerate(meta_chunk):
+            counts = results.get_counts(j)
+            p0 = counts.get('0', 0) / shots
+            p1 = counts.get('1', 0) / shots
+            out[b, r + 1, y + 1, k] = (p0 - p1 + 1) / 2
+
+    return out
+
 
 def MakeQParams(channel_size: int, param_count: int):
     return np.random.uniform(-math.pi, math.pi, size=(channel_size, param_count))
@@ -233,11 +280,12 @@ def quantum_layer(x, q_params):
     return y, grad_fn
 '''
 
+'''
 #SPSA 기법으로 근사적으로 계산
 @tf.custom_gradient
 def quantum_layer(x, q_params):
     def forward_run(x_np, params_np):
-        return FastQuanv3x3(x_np, params_np, channel_size=params_np.shape[0], shots=SHOTS)
+        return FastQuanv3x3_Multi(x_np, params_np, shots=SHOTS)
 
     y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
 
@@ -250,8 +298,8 @@ def quantum_layer(x, q_params):
             param_plus = params_np + shift * Delta
             param_minus = params_np - shift * Delta
 
-            y_plus = FastQuanv3x3(x_np, param_plus, channel_size=param_plus.shape[0], shots=SHOTS)
-            y_minus = FastQuanv3x3(x_np, param_minus, channel_size=param_minus.shape[0], shots=SHOTS)
+            y_plus = FastQuanv3x3_Multi(x_np, param_plus, shots=SHOTS)
+            y_minus = FastQuanv3x3_Multi(x_np, param_minus, shots=SHOTS)
 
             partial = (y_plus - y_minus) / (2.0 * shift)
 
@@ -266,7 +314,35 @@ def quantum_layer(x, q_params):
         return None, grads
 
     return y, grad_fn
+'''
 
+#back propagation에서 앞 classical Layer까지 흘려주기 위해 구조 변경
+@tf.custom_gradient
+def quantum_layer(x, q_params):
+
+    def forward_run(x_np, params_np):
+        #return FastQuanv3x3_Multi(x_np, params_np, shots=SHOTS)
+        return FastQuanv3x3(x_np, params_np, 128)
+    y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
+
+    def grad_fn(dy):
+        shift  = 0.01
+        Delta  = np.random.choice([-1.0, 1.0], size=q_params.shape)
+        y_plus  = tf.numpy_function(forward_run, [x, q_params + shift*Delta], tf.float32)
+        y_minus = tf.numpy_function(forward_run, [x, q_params - shift*Delta], tf.float32)
+        partial     = (y_plus - y_minus) / (2.0 * shift)
+        chain_mult  = tf.reduce_sum(dy * partial)
+        dq          = chain_mult * Delta
+
+        dx_mean = tf.reduce_mean(dy, axis=-1, keepdims=True)
+
+        cin = tf.shape(x)[-1]          # 16
+        dx   = tf.tile(dx_mean, [1, 1, 1, cin])   # (B,H,W,16)
+
+        return dx, tf.reshape(dq, tf.shape(q_params))
+
+    y.set_shape((None, None, None, q_params.shape[0]))  # (B,H,W,128)
+    return y, grad_fn
 
 def OneQLayerFourCLayer():
     model = Sequential()
@@ -296,8 +372,41 @@ def OneQLayerFourCLayer():
 
     return model
 
+def OneCOneQThreeCLayer():
+    model = Sequential()
+
+    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same',
+                     input_shape=(14, 14, 1)))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
+
+    model.add(Conv2D(16, (1, 1), activation='relu', padding='same'))
+    model.add(BatchNormalization())
+
+    model.add(Quanv3x3LayerClass(128, 16))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
+
+    model.add(Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same'))
+    model.add(BatchNormalization())
+
+    model.add(Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same'))
+    model.add(BatchNormalization())
+
+    model.add(Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same'))
+    model.add(BatchNormalization())
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
+
+    model.add(Flatten())
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(512, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(5, activation='softmax'))
+
+    return model
+
 def ModelCompile(model):
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'], run_eagerly=True)
     return model
 
 def Train(model, x_train, y_train, x_test, y_test):
@@ -363,7 +472,7 @@ def Train(model, x_train, y_train, x_test, y_test):
     log_path = os.path.join(save_dir, 'training_log.txt')
     model_path = os.path.join(save_dir, 'model.png')
 
-    num_classes = y_test.shape[1]
+    num_classes = int(np.max(y_test)) + 1
 
     plt.figure()
     for cls in range(num_classes):
@@ -412,7 +521,7 @@ def Train(model, x_train, y_train, x_test, y_test):
 
 def ExTQCNN():
     x_train, y_train, x_test, y_test = PreProcessing()
-    Model = OneQLayerFourCLayer()
+    Model = OneCOneQThreeCLayer()
     Model = ModelCompile(Model)
     Train(Model, x_train, y_train, x_test, y_test)
 
