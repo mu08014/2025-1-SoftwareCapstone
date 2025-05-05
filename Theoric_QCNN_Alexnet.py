@@ -1,4 +1,6 @@
 from qiskit import *
+from qiskit.circuit import ParameterVector
+
 from AlexNet_test import EPOCH
 from AlexNet_test import PreProcessing
 from AlexNet_test import LrLogger
@@ -7,11 +9,13 @@ from AlexNet_test import MNIST_data_size
 from qiskit.visualization import plot_histogram
 from qiskit_aer import AerSimulator
 
+from functools import lru_cache
+
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import math
 import os
+import time
 import tensorflow as tf
 
 from tensorflow.keras.models import Sequential
@@ -22,7 +26,29 @@ from tensorflow.python.profiler import model_analyzer
 from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 from concurrent.futures import ThreadPoolExecutor
 
-SHOTS = 128
+SHOTS = 32
+USE_GPU = False
+
+GPU_BACKEND_OPTS = dict(
+    method="statevector",
+    device="GPU",
+    precision="single",
+    runtime_parameter_bind_enable=True,
+    batched_shots_gpu=True,
+    max_parallel_threads=1,
+    max_parallel_experiments=1
+)
+
+CPU_BACKEND_OPTS = dict(
+    method="statevector",
+    device="CPU",
+    precision="single",
+    max_parallel_threads=8,
+    max_parallel_experiments=8,
+    max_parallel_shots=1
+)
+
+backend_opts = GPU_BACKEND_OPTS if USE_GPU else CPU_BACKEND_OPTS
 
 def Encoding3x3(qc: QuantumCircuit, data: np.array):
     for i in range(9):
@@ -66,16 +92,17 @@ def Quanv3x3LayerCircuit(input_data: np.array, train_theta: np.array):
 
     return qc
 
+
 def QuanvAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
-    #backend = AerSimulator()
-    #transpiled = transpile(qc, backend)
-    #results = backend.run(transpiled, shots=SHOTS).result()
-    
-    #멀티스레딩
+    # backend = AerSimulator()
+    # transpiled = transpile(qc, backend)
+    # results = backend.run(transpiled, shots=SHOTS).result()
+
+    # 멀티스레딩
     backend = AerSimulator(method='statevector',
-                            max_parallel_threads=8,
-                            max_parallel_experiments=8,
-                            max_parallel_shots=1)
+                           max_parallel_threads=8,
+                           max_parallel_experiments=8,
+                           max_parallel_shots=1)
 
     transpiled = transpile(qc, backend)
     results = backend.run(transpiled, shots=shots).result()
@@ -83,136 +110,186 @@ def QuanvAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
     return results
 
 def QuanvGPUAerMeasure(qc: list[QuantumCircuit], shots=SHOTS):
-    backend = AerSimulator(method='statevector', device='GPU')
-
+    backend = AerSimulator(method="statevector", device="GPU", precision="single",
+                        max_parallel_threads=8, max_parallel_experiments=8, max_parallel_shots=1)
     transpiled = transpile(qc, backend)
     results = backend.run(transpiled, shots=shots).result()
 
     return results
 
-def Quanv3x3Layer(data: np.array, params: np.array, stride: int, shots=SHOTS):
-    # 파라미터 수 확인
-    if len(params) != 16:
-        return False
-    # stride가 적절한지 확인
-    if (len(data) - 3) % stride != 0 or (len(data[0]) - 3) % stride != 0:
-        return False
+def QuanvGPUBatchMeasure(patches, thetas, shots=SHOTS):
+    backend, transpiled, d, t = QCTemplate()
 
-    fx = int((len(data) - 3) / stride) + 1
-    fy = int((len(data[0]) - 3) / stride) + 1
-    feat_map = np.zeros((fx, fy), dtype=np.float32)
+    bound_circuits = []
+    for patch, theta in zip(patches, thetas):
+        bind_map = {d[i]: float(patch[i]) for i in range(9)}
+        bind_map.update({t[j]: float(theta[j]) for j in range(16)})
+        bound_circuits.append(transpiled.assign_parameters(bind_map, inplace=False))
 
-    circuits = []
-    patches = []
+    job = backend.run(bound_circuits, shots=shots)
+    return job.result()
 
-    for r in range(0, fx * stride, stride):
-        for c in range(0, fy * stride, stride):
-            patch = data[r:r + 3, c:c + 3].flatten()
-            patches.append((r // stride, c // stride))
+@lru_cache(maxsize=1)
+def QCTemplate():
+    d = ParameterVector('d', 9)
+    t = ParameterVector('t', 16)
+    qc_template = QuantumCircuit(9, 1)
+    
+    for i in range(9):
+        qc_template.rx(np.pi * d[i], i)
+    
+    qc_template.crz(t[0],  1, 0); qc_template.crx(t[1],  1, 0)
+    qc_template.crz(t[2],  3, 2); qc_template.crx(t[3],  3, 2)
+    qc_template.crz(t[4],  2, 0); qc_template.crx(t[5],  2, 0)
+    qc_template.crz(t[6],  8, 7); qc_template.crx(t[7],  8, 7)
+    qc_template.crz(t[8],  5, 4); qc_template.crx(t[9],  5, 4)
+    qc_template.crz(t[10], 7, 6); qc_template.crx(t[11], 7, 6)
+    qc_template.crz(t[12], 6, 4); qc_template.crx(t[13], 6, 4)
+    qc_template.crz(t[14], 4, 0); qc_template.crx(t[15], 4, 0)
 
-            circuits.append(Quanv3x3LayerCircuit(patch, params))
+    qc_template.save_probabilities([0], label='p0')
 
-    results = QuanvAerMeasure(circuits, shots=SHOTS)
+    backend = AerSimulator(**backend_opts)
 
-    for i, (x, y) in enumerate(patches):
-        counts = results.get_counts(i)
-        p0 = counts.get('0', 0) / shots
-        p1 = counts.get('1', 0) / shots
-        feat_map[x, y] = p0 - p1
+    transpiled_template = transpile(qc_template, backend, optimization_level=3)
+    
+    return backend, transpiled_template, d, t
 
-    return feat_map
 
-def BatchQuanv3x3(data: np.array, params: np.array, channel_size: int, shots=SHOTS):
-    B = len(data)                       #Bx28x28xk
-    avg_vals = np.mean(data, axis=-1)   #Bx28x28
+MAX_CIRCS_PER_RUN = 4096
 
-    out = []
-    for i in range(B):
-        feat_stack = []
-        print(f'{i}th Image is running...')
-        for j in range(channel_size):
-            feat_map = Quanv3x3Layer(avg_vals[i], params[j], stride=1, shots=shots)         #26x26
-            feat_map_uint8 = ((feat_map + 1) / 2).astype(np.float32)
-            feat_map_padded = np.pad(feat_map_uint8, pad_width=1, mode='constant')          #28x28
-            feat_stack.append(feat_map_padded)                                              #channel_sizex28x28
-        out.append(np.transpose(feat_stack, (1, 2, 0)))                                 #28x28xchannel_size
-    return np.stack(out, axis=0)                                                            #Bxchannel_sizex28x28
 
-def FastQuanv3x3(data: np.array, params: np.array, channel_size: int, stride=1, shots=SHOTS, chunk_size=5000):
-    B = len(data)
-    avg_vals = np.mean(data, axis=-1)
-    H, W = avg_vals.shape[1], avg_vals.shape[2]
+def _make_binds(mat, d, t):
+    keys = list(d) + list(t)
+    return [ {k: [float(v)] for k, v in zip(keys, row)} for row in mat ]
 
-    circuits = []
-    patch_meta = []  # (b, c, r, y)
 
-    fx = int((H - 3) / stride) + 1
-    fy = int((W - 3) / stride) + 1
+def QuanvBatchProbabilities(patches, thetas):
+    '''
+    backend, transpiled, d, t = QCTemplate()
+    total, exps = len(patches), []
 
+    for s in range(0, total, MAX_CIRCS_PER_RUN):
+        e      = min(s + MAX_CIRCS_PER_RUN, total)
+        binds  = _make_binds(np.hstack([patches[s:e], thetas[s:e]]), d, t)
+        circs  = [transpiled] * len(binds)
+
+        res = backend.run(circs, parameter_binds=binds, shots=1).result()
+        exps.extend((r.data.p0[0] - r.data.p0[1] + 1) * 0.5 for r in res.results)
+    '''
+    
+    backend, tqc, d, t = QCTemplate()
+    param_mat = np.hstack([patches, thetas]).astype(np.float32)
+    res = backend.run(
+        tqc,
+        parameter_binds=param_mat,
+        shots=1,
+    ).result()
+    
+    return ( (r.data.p0[0] - r.data.p0[1] + 1) * 0.5 for r in res.results )
+
+def _extract_patches_tf(x):
+    ks = 3
+    patches = tf.image.extract_patches(
+        images=x,
+        sizes=[1, ks, ks, 1],
+        strides=[1, 1, 1, 1],
+        rates=[1, 1, 1, 1],
+        padding='VALID'
+    )
+
+    B = tf.shape(x)[0]
+    patches = tf.reshape(patches, (B, -1, ks*ks, tf.shape(x)[-1]))
+    return patches
+
+
+def _fast_expvals(patches_np: np.ndarray, thetas_np:  np.ndarray) -> np.ndarray:
+    print(f"start CPU batch : {patches_np.shape}")
+    tic = time.perf_counter()
+    
+    expvals = np.asarray(
+        QuanvBatchProbabilities(
+            patches_np.astype(np.float32),
+            thetas_np.astype(np.float32)
+        ),
+        dtype=np.float32
+    )
+    
+    toc = time.perf_counter()
+    n = len(patches_np)
+    print(f"[Quanv] GPU batch {n:7d} patch → {((toc-tic)*1000):6.1f} ms")
+    
+    return expvals
+
+
+def QuanvBatchExpectation(patches: np.ndarray, thetas:  np.ndarray) -> list[float]:
+    backend, transpiled, d, t = QCTemplate()
+    bound = []
+    for patch, theta in zip(patches, thetas):
+        bind_map = {d[i]: float(patch[i])   for i in range(9)}
+        bind_map.update({t[j]: float(theta[j]) for j in range(16)})
+        bound.append(transpiled.assign_parameters(bind_map, inplace=False))
+
+    job = backend.run(bound).result()
+    exps = []
+    dim = 2**9
+    for idx in range(len(bound)):
+        sv = job.get_statevector(idx)
+        p0 = 0.0
+        p1 = 0.0
+
+        for amp_index, amp in enumerate(sv):
+            prob = abs(amp)**2
+            if (amp_index & 1) == 0:
+                p0 += prob
+            else:
+                p1 += prob
+        exps.append((p0 - p1 + 1.0) * 0.5)
+    return exps
+
+
+@lru_cache(maxsize=8)
+def template_clones(n):
+    tqc = QCTemplate()[1]
+    return [tqc] * n
+
+
+def FastQuanv3x3_Multi(data: np.ndarray, params: np.ndarray, kernel_size: int, stride: int = 1, shots: int=SHOTS, chunk_size: int=4096) -> np.ndarray:
+    B, H, W, C_in = data.shape
+    fx = (H - 3) // stride + 1
+    fy = (W - 3) // stride + 1
+    
+    tf.print("[Quanv] batches:", B, "  patches per batch:", fx * fy * C_in)
+    
+    out = np.zeros((B, H, W, C_in * kernel_size), dtype=np.float32)
+    
     for b in range(B):
-        for c in range(channel_size):
+        patches = []
+        thetas = []
+        meta = []
+        for k in range(kernel_size):
             for r in range(fx):
                 for y in range(fy):
-                    patch = avg_vals[b][r:r+3, y:y+3].flatten()
-                    circuits.append(Quanv3x3LayerCircuit(patch, params[c]))
-                    patch_meta.append((b, c, r, y))
+                    for c in range(C_in):
+                        patch = data[b,
+                                r * stride:r * stride + 3,
+                                y * stride:y * stride + 3,
+                                c].flatten()
+                        patches.append(patch)
+                        thetas.append(params[k, c])
+                        meta.append((k, r, y, c))
+        exp_vals = []
+        for i in range(0, len(patches), chunk_size):
+            exp_vals.extend(
+                QuanvBatchProbabilities(
+                    np.array(patches[i:i+chunk_size], dtype=np.float32),
+                    np.array(thetas[i:i+chunk_size], dtype=np.float32)
+                )
+            )
 
-    out = np.zeros((B, H, W, channel_size), dtype=np.float32)
-    print(len(circuits))
-    for i in range(0, len(circuits), chunk_size):
-        print(f'{i}th Chunk is running...')
-        circ_chunk = circuits[i:i+chunk_size]
-        meta_chunk = patch_meta[i:i+chunk_size]
-
-        #results = QuanvAerMeasure(circ_chunk, shots=SHOTS)
-        #GPU 교체
-        results = QuanvGPUAerMeasure(circ_chunk, shots=shots)
-
-        for j, (b, c, r, y) in enumerate(meta_chunk):
-            counts = results.get_counts(j)
-            p0 = counts.get('0', 0) / shots
-            p1 = counts.get('1', 0) / shots
-            avgZ = (p0 - p1 + 1) / 2
-            out[b, r + 1, y + 1, c] = avgZ
-
-    return out
-
-def FastQuanv3x3_Multi(data: np.ndarray, params: np.ndarray, stride: int = 1, shots: int=SHOTS,chunk_size: int = 5000) -> np.ndarray:
-    B, H, W, C_in = data.shape
-    n_kernels     = params.shape[0]
-
-    fx = (H - 3) // stride + 1   # 패치 개수(행)
-    fy = (W - 3) // stride + 1   # 패치 개수(열)
-
-    circuits, patch_meta = [], []
-
-    for b in range(B):
-        for r in range(fx):
-            for y in range(fy):
-                patch = data[b,r*stride:r*stride + 3,y*stride:y*stride + 3,:].flatten()
-
-                for k in range(n_kernels):
-                    circuits.append(Quanv3x3LayerCircuit(patch, params[k]))
-                    patch_meta.append((b, r, y, k))   # (배치, 행, 열, 커널)
-
-    out = np.zeros((B, H, W, n_kernels), dtype=np.float32)
-    total = len(circuits)
-    for i in range(0, total, chunk_size):
-        circ_chunk = circuits[i:i+chunk_size]
-        meta_chunk = patch_meta[i:i+chunk_size]
-
-        print(f'[{i:>6}/{total}] running on GPU…')
-        results = QuanvGPUAerMeasure(circ_chunk, shots=shots)
-
-        #print(f'[{i:>6}/{total}] running on CPU…')
-        #results = QuanvAerMeasure(circ_chunk, shots=shots)
-
-        for j, (b, r, y, k) in enumerate(meta_chunk):
-            counts = results.get_counts(j)
-            p0 = counts.get('0', 0) / shots
-            p1 = counts.get('1', 0) / shots
-            out[b, r + 1, y + 1, k] = (p0 - p1 + 1) / 2
-
+        for idx, (k, r, y, c) in enumerate(meta):
+            out[b, r + 1, y + 1, k * C_in + c] = exp_vals[idx]
+    
     return out
 
 
@@ -238,91 +315,13 @@ class Quanv3x3LayerClass(tf.keras.layers.Layer):
     def compute_output_shape(self, input_shape):
         return input_shape[:-1] + (self.channel_size,)
 
-'''
-Parameter-shift rule (근데 시간이 너무 오래 걸린다.)
-@tf.custom_gradient
-def quantum_layer(x, q_params):
-    def forward_run(x_np, params_np):
-        return BatchQuanv3x3(x_np, params_np, channel_size=params_np.shape[0], shots=SHOTS)
-
-    y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
-
-    def grad_fn(dy):
-        shift = np.pi / 2
-
-        def param_shift_grad(x_np, params_np, dy_np):
-            grads_np = np.zeros_like(params_np, dtype=np.float32)
-
-            flat_params = params_np.ravel()
-            for i in range(flat_params.size):
-                param_plus = flat_params.copy()
-                param_minus = flat_params.copy()
-
-                param_plus[i] += shift
-                param_minus[i] -= shift
-
-                param_plus = param_plus.reshape(params_np.shape)
-                param_minus = param_minus.reshape(params_np.shape)
-
-                y_plus = BatchQuanv3x3(x_np, param_plus, channel_size=param_plus.shape[0], shots=SHOTS)
-                y_minus = BatchQuanv3x3(x_np, param_minus, channel_size=param_minus.shape[0], shots=SHOTS)
-
-                partial_deriv = (y_plus - y_minus) / 2.0
-                grads_np.ravel()[i] = np.sum(dy_np * partial_deriv)
-
-            return grads_np
-
-        grads = tf.numpy_function(param_shift_grad, [x, q_params, dy], tf.float32)
-        grads = tf.reshape(grads, tf.shape(q_params))
-
-        return None, grads
-
-    return y, grad_fn
-'''
-
-'''
-#SPSA 기법으로 근사적으로 계산
-@tf.custom_gradient
-def quantum_layer(x, q_params):
-    def forward_run(x_np, params_np):
-        return FastQuanv3x3_Multi(x_np, params_np, shots=SHOTS)
-
-    y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
-
-    def grad_fn(dy):
-        shift = 0.01
-
-        def approx_grad(x_np, params_np, dy_np):
-            Delta = np.random.choice([-1.0, 1.0], size=params_np.shape)
-
-            param_plus = params_np + shift * Delta
-            param_minus = params_np - shift * Delta
-
-            y_plus = FastQuanv3x3_Multi(x_np, param_plus, shots=SHOTS)
-            y_minus = FastQuanv3x3_Multi(x_np, param_minus, shots=SHOTS)
-
-            partial = (y_plus - y_minus) / (2.0 * shift)
-
-            chain_mult = np.sum(dy_np * partial)  # scalar
-            grads_spsa = chain_mult * Delta  # shape=(channel_size, param_count)
-
-            return grads_spsa.astype(np.float32)
-
-        grads = tf.numpy_function(approx_grad, [x, q_params, dy], tf.float32)
-        grads = tf.reshape(grads, tf.shape(q_params))
-
-        return None, grads
-
-    return y, grad_fn
-'''
-
 #back propagation에서 앞 classical Layer까지 흘려주기 위해 구조 변경
 @tf.custom_gradient
 def quantum_layer(x, q_params):
 
     def forward_run(x_np, params_np):
-        #return FastQuanv3x3_Multi(x_np, params_np, shots=SHOTS)
-        return FastQuanv3x3(x_np, params_np, 128)
+        return FastQuanv3x3_Multi(x_np, params_np, 32, shots=SHOTS)
+    
     y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
 
     def grad_fn(dy):
@@ -336,12 +335,13 @@ def quantum_layer(x, q_params):
 
         dx_mean = tf.reduce_mean(dy, axis=-1, keepdims=True)
 
-        cin = tf.shape(x)[-1]          # 16
-        dx   = tf.tile(dx_mean, [1, 1, 1, cin])   # (B,H,W,16)
+        cin = tf.shape(x)[-1]
+        dx   = tf.tile(dx_mean, [1, 1, 1, cin])
 
         return dx, tf.reshape(dq, tf.shape(q_params))
 
-    y.set_shape((None, None, None, q_params.shape[0]))  # (B,H,W,128)
+    y.set_shape((None, None, None, q_params.shape[0]))
+    
     return y, grad_fn
 
 def OneQLayerFourCLayer():

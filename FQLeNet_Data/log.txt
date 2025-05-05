@@ -1,0 +1,49 @@
+=========================Options=============================
+-max_depth                  10000
+-min_bytes                  0
+-min_peak_bytes             0
+-min_residual_bytes         0
+-min_output_bytes           0
+-min_micros                 0
+-min_accelerator_micros     0
+-min_cpu_micros             0
+-min_params                 0
+-min_float_ops              1
+-min_occurrence             0
+-step                       -1
+-order_by                   float_ops
+-account_type_regexes       .*
+-start_name_regexes         .*
+-trim_name_regexes
+-show_name_regexes          .*
+-hide_name_regexes
+-account_displayed_op_only  true
+-select                     float_ops
+-output                     stdout:
+
+==================Model Analysis Report======================
+
+Doc:
+op: The nodes are operation kernel type, such as MatMul, Conv2D. Graph nodes belonging to the same type are aggregated together.
+flops: Number of float operations. Note: Please read the implementation for the math behind it.
+
+Profile:
+node name | # float_ops
+Conv2D                   9.03m float_ops (100.00%, 98.15%)
+MatMul                   148.74k float_ops (1.85%, 1.62%)
+BiasAdd                  12.68k float_ops (0.23%, 0.14%)
+MaxPool                  8.58k float_ops (0.09%, 0.09%)
+Softmax                     25 float_ops (0.00%, 0.00%)
+
+======================End of Report==========================
+Traceback (most recent call last):
+  File "/mnt/c/Users/mu080/OneDrive/경희대학교/4학년 1학기/소프트웨어융합캡스톤디자인/2025-1-SoftwareCapstone/main.py", line 19, in <module>
+    ExFQLeNet()
+  File "/mnt/c/Users/mu080/OneDrive/경희대학교/4학년 1학기/소프트웨어융합캡스톤디자인/2025-1-SoftwareCapstone/QuantumLeNet_test.py", line 162, in ExFQLeNet
+    return model
+    ^^^^^^^^^^^^^
+  File "/mnt/c/Users/mu080/OneDrive/경희대학교/4학년 1학기/소프트웨어융합캡스톤디자인/2025-1-SoftwareCapstone/AlexNet_test.py", line 166, in Train
+    plot_model(model, to_file=model_graph_path,show_shapes=True,show_layer_names=True,dpi=96)
+  File "/home/mu08014/anaconda3/envs/qcnn-env/lib/python3.12/site-packages/keras/src/utils/model_visualization.py", line 436, in plot_model
+    raise ImportError(message)
+ImportError: You must install pydot (`pip install pydot`) for `plot_model` to work.

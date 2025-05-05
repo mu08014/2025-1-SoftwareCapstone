@@ -145,6 +145,9 @@ def Train(model, x_train, y_train, x_test, y_test, save_dir='AlexNet_Data'):
     )
 
     epochs = range(1, EPOCH + 1)
+    
+    graph_path = os.path.join(save_dir, 'fq_lenet_model')
+    model.save(graph_path, save_format="tf")
 
     # cal FLOPs
     @tf.function
@@ -238,7 +241,6 @@ def Train(model, x_train, y_train, x_test, y_test, save_dir='AlexNet_Data'):
 
         f.write(f"\nMax Parameter Count: {logger.params}\n")
         f.write(f"\nTotal FLOPs : {FLOPs}\n")
-
 
 
     pred_test = np.argmax(model.predict(x_test, verbose=0), axis=1)

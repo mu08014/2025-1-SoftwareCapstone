@@ -1,8 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.datasets import mnist
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 
 from AlexNet_test import PreProcessing, ModelCompile, Train
 
