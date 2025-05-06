@@ -13,7 +13,7 @@ import numpy as np
 SHOTS = 32
 
 class Quanv3x3LayerClass(tf.keras.layers.Layer):
-    def __init__(self, kernel_size, channel_size, param_count=16):
+    def __init__(self, kernel_size: int, channel_size: int, param_count: int=16):
         super().__init__()
         initializer = tf.random_uniform_initializer(minval=-0.3, maxval=0.3)
         self.q_params = tf.Variable(
@@ -22,26 +22,31 @@ class Quanv3x3LayerClass(tf.keras.layers.Layer):
         )
         self.channel_size = channel_size
         self.kernel_size  = kernel_size
+        self.output_kernel = channel_size * kernel_size
         self.param_count  = param_count
         
     def build(self, input_shape):
         if input_shape[-1] != self.channel_size:
             raise ValueError(f"Expected Cin={self.channel_size}, got {input_shape[-1]}")
+        self.in_height = int(input_shape[1])
+        self.in_width  = int(input_shape[2])
         super().build(input_shape)
 
     def call(self, x):
-        return quantum_layer(x, self.q_params, tf.constant(self.kernel_size, dtype=tf.int32))
+        y = quantum_layer(x, self.q_params, self.kernel_size)
+        y.set_shape([None, self.in_height, self.in_width, self.output_kernel])
+        return y
 
     def compute_output_shape(self, input_shape):
-        cin = input_shape[-1]
-        return input_shape[:-1] + (cin * self.kernel_size,)
+        b, h, w, _ = input_shape
+        return (b, h, w, self.channel_size * self.kernel_size)
     
 def _forward_run(x_np: np.ndarray, params_np: np.ndarray, kernel_size: int) -> np.ndarray:
     return FastQuanv3x3_Multi(x_np, params_np, kernel_size, shots=SHOTS)
 
 def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kernel_size: int, shift: float = 0.01) -> np.ndarray:
-    dx = np.random.choice([-1.0, 1.0], size=x_np.shape, dtype=np.float32)
-    dt = np.random.choice([-1.0, 1.0], size=params_np.shape, dtype=np.float32)
+    dx = np.random.choice([-1.0, 1.0], size=x_np.shape).astype(np.float32)
+    dt = np.random.choice([-1.0, 1.0], size=params_np.shape).astype(np.float32)
     
     y_plus  = _forward_run(x_np + shift * dx, params_np + shift * dt, kernel_size)
     y_minus = _forward_run(x_np - shift * dx, params_np - shift * dt, kernel_size)
@@ -56,10 +61,13 @@ def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kerne
 
 
 @tf.custom_gradient
-def quantum_layer(x, q_params, kernel_size):
+def quantum_layer(x, q_params, kernel_size: int):
     y = tf.numpy_function(_forward_run, [x, q_params, kernel_size], tf.float32)
-    cin = x.shape[-1]
-    y.set_shape((None, None, None, cin * kernel_size))
+    
+    ks = int(q_params.shape[0])
+    cs = int(q_params.shape[1])
+    out_ch = ks * cs
+    tf.ensure_shape(y, [None, 14, 14, out_ch])
 
     def grad_fn(dy):
         dx_dq = tf.numpy_function(_spsa_grad,
@@ -144,7 +152,7 @@ def quantum_layer(x: tf.Tensor,           # (B,H,W,C)
 def FirstQLeNet(input_shape=(14, 14, 1), num_classes=10):
     model = Sequential()
     
-    model.add(Quanv3x3LayerClass(channel_size=input_shape[-1], kernel_size=32))
+    model.add(Quanv3x3LayerClass(channel_size=1, kernel_size=32))
     model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.25))

@@ -10,7 +10,7 @@ from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 from sklearn.metrics import accuracy_score
 
-import os
+import os, logging, traceback
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -18,6 +18,8 @@ MNIST_data_size = 500
 TEST_data_size = 150
 EPOCH = 10
 
+log = logging.getLogger("TrainSafe")
+log.setLevel(logging.INFO)
 
 def PreProcessing():
     (x_train_all, y_train_all), (x_test_all, y_test_all) = mnist.load_data()
@@ -146,108 +148,112 @@ def Train(model, x_train, y_train, x_test, y_test, save_dir='AlexNet_Data'):
 
     epochs = range(1, EPOCH + 1)
     
-    graph_path = os.path.join(save_dir, 'fq_lenet_model')
-    model.save(graph_path, save_format="tf")
-
     # cal FLOPs
-    @tf.function
-    def model_fn(x):
-        return model(x)
+    try:
+        @tf.function
+        def _model_fn(x): return model(x)
 
-    input_tensor = tf.random.normal([1, 14, 14, 1])
-    concrete_func = model_fn.get_concrete_function(input_tensor)
+        dummy = tf.random.normal([1, 14, 14, 1])
+        concrete = _model_fn.get_concrete_function(dummy)
 
-    profiler = model_analyzer.Profiler(graph=concrete_func.graph)
-    opts = ProfileOptionBuilder.float_operation()
-
-    FLOPs = profiler.profile_operations(options=opts)
-
+        prof    = model_analyzer.Profiler(graph=concrete.graph)
+        opts    = ProfileOptionBuilder.float_operation()
+        flops   = prof.profile_operations(options=opts)
+        
+    except Exception:
+        log.exception("FLOPs 계산 실패")
+        flops = "N/A"
+    
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+        
+    try:
+        model_path = os.path.join(save_dir, "fq_lenet_model.keras")  # 또는 .h5
+        model.save(model_path)
+    except Exception:
+        log.exception("모델 저장 실패")
     
-    model_graph_path = os.path.join(save_dir, 'model.png')
-    plot_model(model, to_file=model_graph_path,show_shapes=True,show_layer_names=True,dpi=96)
+    try:
+        png_path = os.path.join(save_dir, "model.png")
+        plot_model(model, to_file=png_path, show_shapes=True, show_layer_names=True, dpi=96)
+    except Exception:
+        log.exception("모델 PNG 저장 실패")
 
-    plt.figure(figsize=(10, 4))
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, logger.accuracy, marker='o')
-    plt.title("Train Accuracy per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
+    def _safe_plot(fn, filename):
+        try:
+            fn()
+            plt.savefig(os.path.join(save_dir, filename))
+            plt.close()
+            log.info("%s 저장 완료", filename)
+        except Exception:
+            plt.close()
+            log.exception("%s 생성 실패", filename)
 
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, logger.loss, marker='o')
-    plt.title("Train Loss per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
+    _safe_plot(
+        lambda: (_plot_train_val(logger.accuracy, logger.loss, epochs)),
+        "train_graph.png",
+    )
+    _safe_plot(
+        lambda: (_plot_test_val(logger.val_accuracy, logger.val_loss, epochs)),
+        "test_graph.png",
+    )
+    _safe_plot(
+        lambda: (_plot_class_accuracy(classwise_logger.train_class_accuracies,
+                                      epochs, "Train")),
+        "train_classwise_accuracy_graph.png",
+    )
+    _safe_plot(
+        lambda: (_plot_class_accuracy(classwise_logger.test_class_accuracies,
+                                      epochs, "Test")),
+        "test_classwise_accuracy_graph.png",
+    )
+
+    try:
+        with open(os.path.join(save_dir, "training_log.txt"), "w") as f:
+            f.write(f"{MNIST_data_size} MNIST Data size, {EPOCH} epochs\n\n")
+            f.write("Epoch\tAccuracy\tLoss\n")
+            for e, acc, loss in zip(epochs, logger.accuracy, logger.loss):
+                f.write(f"{e}\t{acc}\t{loss}\n")
+
+            f.write("\nTrain Class-wise Accuracy per Epoch:\n")
+            for c, arr in enumerate(classwise_logger.train_class_accuracies):
+                f.write(f"Class {c}: {arr}\n")
+
+            f.write("\nTest Class-wise Accuracy per Epoch:\n")
+            for c, arr in enumerate(classwise_logger.test_class_accuracies):
+                f.write(f"Class {c}: {arr}\n")
+
+            f.write(f"\nMax Parameter Count: {logger.params}\n")
+            f.write(f"Total FLOPs: {flops}\n")
+        log.info("✅ training_log.txt 저장 완료")
+    except Exception:
+        log.exception("로그 파일 저장 실패")
+
+    try:
+        pred = np.argmax(model.predict(x_test, verbose=0), axis=1)
+        true = np.argmax(y_test,               axis=1)
+        log.info("예측된 클래스 분포  : %s", np.bincount(pred))
+        log.info("실제 정답  클래스 분포: %s", np.bincount(true))
+    except Exception:
+        log.exception("최종 예측/통계 단계 실패")
+
+def _plot_train_val(acc, loss, epochs):
+    plt.figure(figsize=(10,4))
+    plt.subplot(1,2,1); plt.plot(epochs, acc,  marker='o'); plt.title("Train Accuracy")
+    plt.subplot(1,2,2); plt.plot(epochs, loss, marker='o'); plt.title("Train Loss")
     plt.tight_layout()
 
-    graph_path = os.path.join(save_dir, 'train_graph.png')
-    plt.savefig(graph_path)
-
-    num_classes = y_test.shape[1]
-
-    plt.figure(figsize=(10, 4))
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, logger.val_accuracy, marker='o', color='tab:orange')
-    plt.title("Test Accuracy per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Test Accuracy")
-
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, logger.val_loss, marker='o', color='tab:red')
-    plt.title("Test Loss per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Test Loss")
+def _plot_test_val(acc, loss, epochs):
+    plt.figure(figsize=(10,4))
+    plt.subplot(1,2,1); plt.plot(epochs, acc,  marker='o'); plt.title("Test Accuracy")
+    plt.subplot(1,2,2); plt.plot(epochs, loss, marker='o'); plt.title("Test Loss")
     plt.tight_layout()
 
-    test_graph_path = os.path.join(save_dir, 'test_graph.png')
-    plt.savefig(test_graph_path)
-
+def _plot_class_accuracy(cls_dict, epochs, tag):
     plt.figure()
-    for cls in range(num_classes):
-        plt.plot(epochs, classwise_logger.test_class_accuracies[cls], marker='o', label=f'Class {cls}')
-    plt.title("Test Class-wise Accuracy per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.legend()
-    test_class_graph_path = os.path.join(save_dir, 'test_classwise_accuracy_graph.png')
-    plt.savefig(test_class_graph_path)
-
-    plt.figure()
-    for cls in range(num_classes):
-        plt.plot(epochs, classwise_logger.train_class_accuracies[cls], marker='o', label=f'Class {cls}')
-    plt.title("Train Class-wise Accuracy per Epoch")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.legend()
-    train_class_graph_path = os.path.join(save_dir, 'train_classwise_accuracy_graph.png')
-    plt.savefig(train_class_graph_path)
-
-    log_path = os.path.join(save_dir, 'training_log.txt')
-    with open(log_path, 'w') as f:
-        f.write(f"{MNIST_data_size} MNIST Data size, {EPOCH} epochs\n\n")
-        f.write("Epoch\tAccuracy\tLoss\n")
-        for i in range(len(epochs)):
-            f.write(f"{epochs[i]}\t{logger.accuracy[i]}\t{logger.loss[i]}\n")
-
-        f.write("\nTrain Class-wise Accuracy per Epoch:\n")
-        for cls in range(num_classes):
-            f.write(f"Class {cls}: {classwise_logger.train_class_accuracies[cls]}\n")
-
-        f.write("\nTest Class-wise Accuracy per Epoch:\n")
-        for cls in range(num_classes):
-            f.write(f"Class {cls}: {classwise_logger.test_class_accuracies[cls]}\n")
-
-        f.write(f"\nMax Parameter Count: {logger.params}\n")
-        f.write(f"\nTotal FLOPs : {FLOPs}\n")
-
-
-    pred_test = np.argmax(model.predict(x_test, verbose=0), axis=1)
-    true_test = np.argmax(y_test, axis=1)
-
-    print("예측된 클래스 분포:", np.bincount(pred_test))
-    print("실제 정답 클래스 분포:", np.bincount(true_test))
+    for c, arr in enumerate(cls_dict):
+        plt.plot(epochs, arr, marker='o', label=f'Class {c}')
+    plt.title(f"{tag} Class-wise Accuracy"); plt.xlabel("Epoch"); plt.ylabel("Acc"); plt.legend()
 
 class LrLogger(tf.keras.callbacks.Callback):
     def on_train_begin(self, logs=None):

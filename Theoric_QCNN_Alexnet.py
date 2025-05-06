@@ -161,11 +161,14 @@ MAX_CIRCS_PER_RUN = 4096
 
 def _make_binds(mat, d, t):
     keys = list(d) + list(t)
-    return [ {k: [float(v)] for k, v in zip(keys, row)} for row in mat ]
+    out = [
+        {k: [float(v)] for k, v in zip(keys, row)}
+        for row in np.asarray(mat)      # row 는 1-D ndarray
+    ]
+    return list(out)
 
 
 def QuanvBatchProbabilities(patches, thetas):
-    '''
     backend, transpiled, d, t = QCTemplate()
     total, exps = len(patches), []
 
@@ -176,17 +179,8 @@ def QuanvBatchProbabilities(patches, thetas):
 
         res = backend.run(circs, parameter_binds=binds, shots=1).result()
         exps.extend((r.data.p0[0] - r.data.p0[1] + 1) * 0.5 for r in res.results)
-    '''
     
-    backend, tqc, d, t = QCTemplate()
-    param_mat = np.hstack([patches, thetas]).astype(np.float32)
-    res = backend.run(
-        tqc,
-        parameter_binds=param_mat,
-        shots=1,
-    ).result()
-    
-    return ( (r.data.p0[0] - r.data.p0[1] + 1) * 0.5 for r in res.results )
+    return exps
 
 def _extract_patches_tf(x):
     ks = 3
@@ -264,6 +258,7 @@ def FastQuanv3x3_Multi(data: np.ndarray, params: np.ndarray, kernel_size: int, s
     out = np.zeros((B, H, W, C_in * kernel_size), dtype=np.float32)
     
     for b in range(B):
+        tf.print(b ,"/", B, " batch is learning...")
         patches = []
         thetas = []
         meta = []
@@ -297,30 +292,33 @@ def MakeQParams(channel_size: int, param_count: int):
     return np.random.uniform(-math.pi, math.pi, size=(channel_size, param_count))
 
 class Quanv3x3LayerClass(tf.keras.layers.Layer):
-    def __init__(self, channel_size, param_count):
+    def __init__(self, input_kernel_size, kernel_size, param_count):
         super().__init__()
         initializer = tf.random_uniform_initializer(minval=-np.pi, maxval=np.pi)
+        self.input_kernel_size = input_kernel_size
+        self.output_kernel_size = kernel_size * input_kernel_size
+        self.param_count = param_count
+        
         self.q_params = tf.Variable(
-            initial_value=initializer(shape=(channel_size, param_count), dtype="float32"),
+            initial_value=initializer(shape=(self.output_kernel_size, param_count), dtype="float32"),
             trainable=True
         )
-        self.channel_size = channel_size
-        self.param_count = param_count
 
     def call(self, x):
-        ql = quantum_layer(x, self.q_params)
-        output_shape = (x.shape[0], x.shape[1], x.shape[2], self.channel_size)
+        ql = quantum_layer(x, self.q_params, self.output_kernel_size)
+        output_shape = (x.shape[0], x.shape[1], x.shape[2], self.output_kernel_size)
         return tf.ensure_shape(ql, output_shape)
 
     def compute_output_shape(self, input_shape):
-        return input_shape[:-1] + (self.channel_size,)
+        *spatial, cin = input_shape
+        return (*spatial, self.output_kernel_size)
 
 #back propagation에서 앞 classical Layer까지 흘려주기 위해 구조 변경
 @tf.custom_gradient
-def quantum_layer(x, q_params):
+def quantum_layer(x, q_params, kernel_size):
 
     def forward_run(x_np, params_np):
-        return FastQuanv3x3_Multi(x_np, params_np, 32, shots=SHOTS)
+        return FastQuanv3x3_Multi(x_np, params_np, kernel_size, shots=SHOTS)
     
     y = tf.numpy_function(forward_run, [x, q_params], tf.float32)
 
@@ -346,7 +344,7 @@ def quantum_layer(x, q_params):
 
 def OneQLayerFourCLayer():
     model = Sequential()
-    model.add(Quanv3x3LayerClass(64, 16))
+    model.add(Quanv3x3LayerClass(1, 32, 16))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=2))
 
     model.add(Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same'))

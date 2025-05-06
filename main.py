@@ -17,3 +17,4 @@ JIT_KW = dict(jit_compile=False)
 
 if __name__ == '__main__':
     ExFQLeNet()
+    #ExLeNet()
