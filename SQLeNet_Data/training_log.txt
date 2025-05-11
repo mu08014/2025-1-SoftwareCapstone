@@ -1,0 +1,431 @@
+500 MNIST Data size, 10 epochs
+
+Epoch	Accuracy	Loss
+1	0.2199999988079071	1.6525832414627075
+2	0.19200000166893005	1.6319435834884644
+3	0.19599999487400055	1.6168522834777832
+4	0.17800000309944153	1.6164799928665161
+5	0.20999999344348907	1.6100131273269653
+6	0.18400000035762787	1.6124653816223145
+7	0.18799999356269836	1.616980791091919
+8	0.20600000023841858	1.6168137788772583
+9	0.2160000056028366	1.6062506437301636
+10	0.19200000166893005	1.612074851989746
+
+Train Class-wise Accuracy per Epoch:
+Class 0: [0.0, 0.23, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.02, 0.0]
+Class 1: [0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8]
+Class 2: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 3: [0.0, 0.44, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.63]
+Class 4: [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.01]
+
+Test Class-wise Accuracy per Epoch:
+Class 0: [0.0, 0.23333333333333334, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.03333333333333333, 0.0]
+Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7666666666666667]
+Class 2: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 3: [0.0, 0.36666666666666664, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.6333333333333333]
+Class 4: [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0]
+
+Max Parameter Count: 132589
+Total FLOPs: name: "_TFProfRoot"
+total_float_ops: 221088
+children {
+  name: "Conv2D"
+  float_ops: 213248
+  total_float_ops: 221088
+  graph_nodes {
+    name: "sequential_1/conv2d_1/convolution"
+    float_ops: 112896
+    total_float_ops: 112896
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 1
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 3
+        }
+        dim {
+          size: 3
+        }
+        dim {
+          size: 1
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+    total_definition_count: 1
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_1_2/convolution"
+    float_ops: 100352
+    total_float_ops: 100352
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 1
+        }
+        dim {
+          size: 32
+        }
+        dim {
+          size: 8
+        }
+      }
+    }
+    total_definition_count: 1
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_2_1/convolution"
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: -1
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 64
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 1
+        }
+        dim {
+          size: 64
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+    total_definition_count: 1
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_3_1/convolution"
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: -1
+        }
+        dim {
+          size: 7
+        }
+        dim {
+          size: 7
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 3
+        }
+        dim {
+          size: 3
+        }
+        dim {
+          size: 32
+        }
+        dim {
+          size: 64
+        }
+      }
+    }
+    total_definition_count: 1
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_4_1/convolution"
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: -1
+        }
+        dim {
+          size: 7
+        }
+        dim {
+          size: 7
+        }
+        dim {
+          size: 64
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 3
+        }
+        dim {
+          size: 3
+        }
+        dim {
+          size: 64
+        }
+        dim {
+          size: 64
+        }
+      }
+    }
+    total_definition_count: 1
+  }
+  children {
+    name: "BiasAdd"
+    float_ops: 7840
+    total_float_ops: 7840
+    graph_nodes {
+      name: "sequential_1/conv2d_1/BiasAdd"
+      float_ops: 6272
+      total_float_ops: 6272
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: 1
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 32
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 32
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+    graph_nodes {
+      name: "sequential_1/conv2d_1_2/BiasAdd"
+      float_ops: 1568
+      total_float_ops: 1568
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: 1
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 8
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 8
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+    graph_nodes {
+      name: "sequential_1/conv2d_2_1/BiasAdd"
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 32
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 32
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+    graph_nodes {
+      name: "sequential_1/conv2d_3_1/BiasAdd"
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 7
+          }
+          dim {
+            size: 7
+          }
+          dim {
+            size: 64
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 64
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+    graph_nodes {
+      name: "sequential_1/conv2d_4_1/BiasAdd"
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 7
+          }
+          dim {
+            size: 7
+          }
+          dim {
+            size: 64
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 64
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+    graph_nodes {
+      name: "sequential_1/dense_1/BiasAdd"
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 128
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 128
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+    graph_nodes {
+      name: "sequential_1/dense_1_2/BiasAdd"
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 5
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 5
+          }
+        }
+      }
+      total_definition_count: 1
+    }
+  }
+}
+

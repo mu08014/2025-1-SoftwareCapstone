@@ -1,6 +1,6 @@
 from qiskit import *
 from AlexNet_test import PreProcessing, Train
-from Theoric_QCNN_Alexnet import FastQuanv3x3_Multi, _fast_expvals
+from Theoric_QCNN_Alexnet import FastQuanv3x3_Multi, _fast_expvals, FasterQuanv3x3
 from typing import Tuple, Callable
 
 from tensorflow.keras.models import Sequential
@@ -13,8 +13,8 @@ import numpy as np
 SHOTS = 32
 
 class Quanv3x3LayerClass(tf.keras.layers.Layer):
-    def __init__(self, kernel_size: int, channel_size: int, param_count: int=16):
-        super().__init__()
+    def __init__(self, kernel_size: int, channel_size: int, param_count: int=16, **kwargs,):
+        super().__init__(**kwargs)
         initializer = tf.random_uniform_initializer(minval=-0.3, maxval=0.3)
         self.q_params = tf.Variable(
             initializer(shape=(kernel_size, channel_size, param_count), dtype=tf.float32),
@@ -41,8 +41,19 @@ class Quanv3x3LayerClass(tf.keras.layers.Layer):
         b, h, w, _ = input_shape
         return (b, h, w, self.channel_size * self.kernel_size)
     
+    def get_config(self):
+        base = super().get_config()
+        base.update(
+            {
+                "kernel_size":   self.kernel_size,
+                "channel_size":  self.channel_size,
+                "param_count":   self.param_count,
+            }
+        )
+        return base
+    
 def _forward_run(x_np: np.ndarray, params_np: np.ndarray, kernel_size: int) -> np.ndarray:
-    return FastQuanv3x3_Multi(x_np, params_np, kernel_size, shots=SHOTS)
+    return FasterQuanv3x3(x_np, params_np, kernel_size, shots=SHOTS) #변경
 
 def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kernel_size: int, shift: float = 0.01) -> np.ndarray:
     dx = np.random.choice([-1.0, 1.0], size=x_np.shape).astype(np.float32)
@@ -180,3 +191,61 @@ def ExFQLeNet():
     Model = FirstQLeNet(num_classes=5)
     Model = ModelCompile(Model)
     Train(Model, x_train, y_train, x_test, y_test, save_dir='FQLeNet_Data')
+    
+def SecondQLeNet(input_shape=(14, 14, 1), num_classes=10):
+    model = Sequential()
+    
+    model.add(Conv2D(8, (3, 3), activation='relu', padding='same', input_shape=input_shape))
+    model.add(Quanv3x3LayerClass(channel_size=8, kernel_size=8))
+    model.add(Conv2D(32, (1, 1), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.25))
+
+    # 2nd Convolution block
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.25))
+
+    # Fully connected classifier
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+
+    return model
+
+def ExSQLeNet():
+    x_train, y_train, x_test, y_test = PreProcessing()
+    Model = SecondQLeNet(num_classes=5)
+    Model = ModelCompile(Model)
+    Train(Model, x_train, y_train, x_test, y_test, save_dir='SQLeNet_Data')
+    
+def ThirdQLeNet(input_shape=(14, 14, 1), num_classes=10):
+    model = Sequential()
+    
+    model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=input_shape))
+    model.add(Conv2D(16, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.25))
+
+    # 2nd Convolution block
+    model.add(Quanv3x3LayerClass(channel_size=16, kernel_size=8))
+    model.add(Conv2D(64, (1, 1), activation='relu', padding='same'))
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    #model.add(Dropout(0.25))
+
+    # Fully connected classifier
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+
+    return model
+
+def ExTQLeNet():
+    x_train, y_train, x_test, y_test = PreProcessing()
+    Model = SecondQLeNet(num_classes=5)
+    Model = ModelCompile(Model)
+    Train(Model, x_train, y_train, x_test, y_test, save_dir='TQLeNet_Data')
