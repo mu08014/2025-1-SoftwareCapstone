@@ -68,7 +68,7 @@ def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kerne
     dx_np = scalar_dir * dx
     dt_np = scalar_dir * dt
     
-    return dx_np.astype(np.float32), dt_np.astype(np.float32)
+    return np.zeros_like(x_np, dtype=np.float32), dt_np.astype(np.float32)
 
 
 @tf.custom_gradient
@@ -78,17 +78,19 @@ def quantum_layer(x, q_params, kernel_size: int):
     ks = int(q_params.shape[0])
     cs = int(q_params.shape[1])
     out_ch = ks * cs
-    tf.ensure_shape(y, [None, 14, 14, out_ch])
+    tf.ensure_shape(y, [None, 7, 7, out_ch])
 
     def grad_fn(dy):
         dx_dq = tf.numpy_function(_spsa_grad,
                                   [x, q_params, dy, kernel_size],
                                   [tf.float32, tf.float32])
         
-        dx, dq = dx_dq
-        dx.set_shape(x.shape)
+        _, dq = dx_dq
+        dy = tf.ensure_shape(dy, x.shape)
         dq.set_shape(q_params.shape)
-        return dx, dq, None
+        
+        
+        return dy, dq, None
 
     return y, grad_fn
 
@@ -195,9 +197,9 @@ def ExFQLeNet():
 def SecondQLeNet(input_shape=(14, 14, 1), num_classes=10):
     model = Sequential()
     
-    model.add(Conv2D(8, (3, 3), activation='relu', padding='same', input_shape=input_shape))
-    model.add(Quanv3x3LayerClass(channel_size=8, kernel_size=8))
-    model.add(Conv2D(32, (1, 1), activation='relu', padding='same'))
+    model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=input_shape))
+    model.add(Quanv3x3LayerClass(channel_size=32, kernel_size=1))  
+    #model.add(Conv2D(32, (1, 1), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.25))
 
@@ -225,13 +227,13 @@ def ThirdQLeNet(input_shape=(14, 14, 1), num_classes=10):
     model = Sequential()
     
     model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=input_shape))
-    model.add(Conv2D(16, (3, 3), activation='relu', padding='same'))
+    model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.25))
 
     # 2nd Convolution block
-    model.add(Quanv3x3LayerClass(channel_size=16, kernel_size=8))
-    model.add(Conv2D(64, (1, 1), activation='relu', padding='same'))
+    #model.add(Conv2D(16, (1, 1), activation='relu', padding='same'))
+    model.add(Quanv3x3LayerClass(channel_size=64, kernel_size=1))
     model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.25))

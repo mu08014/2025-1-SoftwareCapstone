@@ -159,27 +159,35 @@ def QCTemplate():
 MAX_CIRCS_PER_RUN = 2048
 
 
-def _make_binds(mat, d, t):
+def _make_binds(patches, thetas, d, t):
     keys = list(d) + list(t)
-    out = [
+    mat  = np.hstack([patches, thetas])
+    
+    return [
         {k: [float(v)] for k, v in zip(keys, row)}
-        for row in np.asarray(mat)      # row 는 1-D ndarray
+        for row in mat
     ]
-    return list(out)
 
 
 def QuanvBatchProbabilities(patches, thetas):
     backend, transpiled, d, t = QCTemplate()
+    patches_np = np.asarray(patches, dtype=np.float32)
+    thetas_np  = np.asarray(thetas,  dtype=np.float32)
     total, exps = len(patches), []
 
     for s in range(0, total, MAX_CIRCS_PER_RUN):
         e      = min(s + MAX_CIRCS_PER_RUN, total)
-        binds  = _make_binds(np.hstack([patches[s:e], thetas[s:e]]), d, t)
+        binds  = _make_binds(patches_np[s:e], thetas_np[s:e], d, t)
         circs  = [transpiled] * len(binds)
-        print(f"▶ run   chunk {s:03d}   size={len(binds):>4}", flush=True)
+        #print(f"▶ run   chunk {s:03d}   size={len(binds):>4}", flush=True)
         res = backend.run(circs, parameter_binds=binds, shots=1).result()
-        print(f"✔ done  chunk {s:03d}", flush=True)
-        exps.extend((r.data.p0[0] - r.data.p0[1] + 1) * 0.5 for r in res.results)
+        #print(f"✔ done  chunk {s:03d}", flush=True)
+        
+        for r in res.results:
+            counts = r.data.counts
+            p0 = counts.get('0', 0) / 1
+            p1 = counts.get('1', 0) / 1
+            exps.append((p0 - p1))
     
     return  np.asarray(exps, dtype=np.float32)
 
@@ -294,41 +302,40 @@ def FasterQuanv3x3(data: np.ndarray, params: np.ndarray, kernel_size: int, strid
     fx = tf.math.floordiv(H - 3, stride) + 1
     fy = tf.math.floordiv(W - 3, stride) + 1
     k  = tf.cast(kernel_size, tf.int32)
-
+    
+    tf.print("[Quanv] B =", B, "fx =", fx, "fy =", fy, "patches =", B*fx*fy*C_in)
+    
     patches = tf.image.extract_patches(
-        images   = data,
-        sizes    = [1, 3, 3, 1],
-        strides  = [1, stride, stride, 1],
-        rates    = [1, 1, 1, 1],
-        padding  = "VALID"
+        images=data,
+        sizes=[1, 3, 3, 1],
+        strides=[1, stride, stride, 1],
+        rates=[1, 1, 1, 1],
+        padding="VALID"
     )
     patches = tf.reshape(
         patches,
-        tf.stack([B, fx, fy, C_in, tf.constant(9, tf.int32)])
-    )
-    patches = tf.transpose(patches, [0,1,2,4,3])
+        tf.stack([B, fx, fy, C_in, 9])
+    ) 
+    patches = tf.transpose(patches, [0, 1, 2, 4, 3])
     patches = tf.reshape(patches, [-1, 9])
 
-    k, C_in, P = tf.unstack(tf.shape(params)) 
-    theta = tf.reshape(params, tf.stack([1, k, C_in, P]))
-    theta = tf.tile(theta, tf.stack([B * fx * fy, 1, 1, 1]))
-    theta = tf.reshape(theta, [-1, P])  
+    k, C_in, P = tf.unstack(tf.shape(params))
+    theta      = tf.reshape(params, [1, k, C_in, P])
+    theta      = tf.tile(theta, [B * fx * fy, 1, 1, 1])
+    theta      = tf.reshape(theta, [-1, P])
 
-    tf.print("▶ run   B=", B,
-         " fx=", fx, " fy=", fy,
-         " patches=", tf.shape(patches)[0],
-         " thetaP=", tf.shape(theta)[1])
-    
+
+    patches_k = tf.repeat(patches, k, axis=0)
+
     flat_vals = tf.numpy_function(
         QuanvBatchProbabilities,
-        [patches, theta],
+        [patches_k, theta],
         Tout=tf.float32
     )
-    tf.print("✔ done  exp_vals=", tf.shape(flat_vals)[0])
     flat_vals = tf.reshape(flat_vals, [-1])
 
-    Nxy  = fx * fy
-    unit = k * C_in
+    Nxy   = fx * fy
+    unit  = k * C_in
     total = tf.size(flat_vals)
 
     tf.debugging.assert_equal(
@@ -338,22 +345,25 @@ def FasterQuanv3x3(data: np.ndarray, params: np.ndarray, kernel_size: int, strid
 
     batch_idx = tf.repeat(tf.range(B), Nxy * unit)
 
-    r_vec = tf.repeat(tf.range(fx) + 1, fy)          # (Nxy,)
-    c_vec = tf.tile  (tf.range(fy) + 1, [fx])
+    r_vec = tf.repeat(tf.range(fx) + 1, fy)       # (Nxy,)
+    c_vec = tf.tile(tf.range(fy) + 1, [fx])
 
     r_idx = tf.tile(tf.repeat(r_vec, unit), [B])
     c_idx = tf.tile(tf.repeat(c_vec, unit), [B])
 
-    k_idx  = tf.tile(tf.repeat(tf.range(k),  C_in), [B * Nxy])
-    ch_idx = tf.tile(tf.range(C_in),                [B * Nxy * k])
+    k_idx  = tf.tile(tf.repeat(tf.range(k), C_in), [B * Nxy])
+    ch_idx = tf.tile(tf.range(C_in),               [B * Nxy * k])
 
     indices = tf.stack(
         [batch_idx, r_idx, c_idx, k_idx * C_in + ch_idx],
         axis=1
-    )                                                # (total,4)
-
+    )
+    
     out = tf.scatter_nd(indices, flat_vals,
                         tf.stack([B, H, W, unit]))
+    
+    tf.print("FasterQuanv3x3 done, flat_vals =", tf.size(flat_vals))
+     
     return out
 
 
