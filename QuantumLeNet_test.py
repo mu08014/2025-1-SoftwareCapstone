@@ -55,7 +55,7 @@ class Quanv3x3LayerClass(tf.keras.layers.Layer):
 def _forward_run(x_np: np.ndarray, params_np: np.ndarray, kernel_size: int) -> np.ndarray:
     return FasterQuanv3x3(x_np, params_np, kernel_size, shots=SHOTS) #변경
 
-def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kernel_size: int, shift: float = 0.01) -> np.ndarray:
+def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kernel_size: int, shift: float = 0.001) -> np.ndarray:
     dx = np.random.choice([-1.0, 1.0], size=x_np.shape).astype(np.float32)
     dt = np.random.choice([-1.0, 1.0], size=params_np.shape).astype(np.float32)
     
@@ -65,32 +65,42 @@ def _spsa_grad(x_np: np.ndarray, params_np: np.ndarray, dy_np: np.ndarray, kerne
     Df = (y_plus - y_minus) / (2.0 * shift)
     scalar_dir = np.sum(dy_np * Df)
     
-    dx_np = scalar_dir * dx
     dt_np = scalar_dir * dt
     
-    return np.zeros_like(x_np, dtype=np.float32), dt_np.astype(np.float32)
+    return dt_np.astype(np.float32)
 
 
 @tf.custom_gradient
 def quantum_layer(x, q_params, kernel_size: int):
     y = tf.numpy_function(_forward_run, [x, q_params, kernel_size], tf.float32)
-    
-    ks = int(q_params.shape[0])
-    cs = int(q_params.shape[1])
-    out_ch = ks * cs
-    tf.ensure_shape(y, [None, 7, 7, out_ch])
+
+    Cin_s = x.shape[-1]
+    ks_s  = q_params.shape[0]
+
+    H_s, W_s = x.shape[1], x.shape[2]
+
+    if None not in (Cin_s, ks_s, H_s, W_s):
+        out_ch_s = Cin_s * ks_s
+        tf.ensure_shape(y, [None, H_s, W_s, out_ch_s])
 
     def grad_fn(dy):
-        dx_dq = tf.numpy_function(_spsa_grad,
-                                  [x, q_params, dy, kernel_size],
-                                  [tf.float32, tf.float32])
-        
-        _, dq = dx_dq
-        dy = tf.ensure_shape(dy, x.shape)
+        if None not in (Cin_s, ks_s, H_s, W_s):
+            tf.ensure_shape(dy, [None, H_s, W_s, Cin_s * ks_s])
+
+        ks = tf.shape(q_params)[0]
+        Cin = tf.shape(x)[-1]
+
+        dy_blocks = tf.reshape(dy, (-1, H_s, W_s, Cin, ks))
+        dx        = tf.reduce_mean(dy_blocks, axis=-1)
+
+        dq = tf.numpy_function(
+            _spsa_grad,
+            [x, q_params, dy, kernel_size],
+            tf.float32)
+
+        dx.set_shape(x.shape)
         dq.set_shape(q_params.shape)
-        
-        
-        return dy, dq, None
+        return dx, dq, None
 
     return y, grad_fn
 
@@ -198,8 +208,9 @@ def SecondQLeNet(input_shape=(14, 14, 1), num_classes=10):
     model = Sequential()
     
     model.add(Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=input_shape))
-    model.add(Quanv3x3LayerClass(channel_size=32, kernel_size=1))  
-    #model.add(Conv2D(32, (1, 1), activation='relu', padding='same'))
+    model.add(Conv2D(16, (1, 1), activation='relu', padding='same'))
+    model.add(Quanv3x3LayerClass(channel_size=16, kernel_size=4))  
+    model.add(Conv2D(32, (1, 1), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.25))
 
@@ -232,8 +243,8 @@ def ThirdQLeNet(input_shape=(14, 14, 1), num_classes=10):
     #model.add(Dropout(0.25))
 
     # 2nd Convolution block
-    #model.add(Conv2D(16, (1, 1), activation='relu', padding='same'))
-    model.add(Quanv3x3LayerClass(channel_size=64, kernel_size=1))
+    model.add(Conv2D(16, (1, 1), activation='relu', padding='same'))
+    model.add(Quanv3x3LayerClass(channel_size=16, kernel_size=8))
     model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     #model.add(Dropout(0.25))

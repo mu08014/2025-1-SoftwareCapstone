@@ -1,38 +1,38 @@
 500 MNIST Data size, 10 epochs
 
 Epoch	Accuracy	Loss
-1	0.18400000035762787	1.6095101833343506
-2	0.20000000298023224	1.6094574928283691
-3	0.20000000298023224	1.6094553470611572
-4	0.20000000298023224	1.6094571352005005
-5	0.20000000298023224	1.6094497442245483
-6	0.20000000298023224	1.609452486038208
-7	0.20000000298023224	1.6094480752944946
-8	0.20000000298023224	1.6094526052474976
-9	0.20000000298023224	1.6094454526901245
-10	0.1899999976158142	1.6094443798065186
+1	0.20000000298023224	1.6095236539840698
+2	0.20000000298023224	1.6094555854797363
+3	0.20000000298023224	1.6094470024108887
+4	0.20000000298023224	1.6094481945037842
+5	0.20000000298023224	1.6094530820846558
+6	0.20000000298023224	1.6094521284103394
+7	0.20000000298023224	1.6094558238983154
+8	0.20000000298023224	1.6094558238983154
+9	0.20000000298023224	1.6094481945037842
+10	0.20000000298023224	1.6094506978988647
 
 Train Class-wise Accuracy per Epoch:
-Class 0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 0: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 Class 2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-Class 4: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0]
+Class 3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 4: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 Test Class-wise Accuracy per Epoch:
-Class 0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 0: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 Class 2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-Class 4: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0]
+Class 3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 4: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-Max Parameter Count: 130245
+Max Parameter Count: 132853
 Total FLOPs: name: "_TFProfRoot"
-total_float_ops: 119168
+total_float_ops: 323008
 children {
   name: "Conv2D"
-  float_ops: 112896
-  total_float_ops: 119168
+  float_ops: 313600
+  total_float_ops: 323008
   graph_nodes {
     name: "sequential_1/conv2d_1/convolution"
     float_ops: 112896
@@ -75,6 +75,84 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_1_2/convolution"
+    float_ops: 200704
+    total_definition_count: 1
+    total_float_ops: 200704
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 1
+        }
+        dim {
+          size: 32
+        }
+        dim {
+          size: 16
+        }
+      }
+    }
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_2_1/convolution"
+    total_definition_count: 1
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: -1
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 14
+        }
+        dim {
+          size: 64
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 1
+        }
+        dim {
+          size: 64
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_3_1/convolution"
     total_definition_count: 1
     input_shapes {
       key: 0
@@ -112,7 +190,7 @@ children {
     }
   }
   graph_nodes {
-    name: "sequential_1/conv2d_2_1/convolution"
+    name: "sequential_1/conv2d_4_1/convolution"
     total_definition_count: 1
     input_shapes {
       key: 0
@@ -151,8 +229,8 @@ children {
   }
   children {
     name: "BiasAdd"
-    float_ops: 6272
-    total_float_ops: 6272
+    float_ops: 9408
+    total_float_ops: 9408
     graph_nodes {
       name: "sequential_1/conv2d_1/BiasAdd"
       float_ops: 6272
@@ -186,6 +264,66 @@ children {
     }
     graph_nodes {
       name: "sequential_1/conv2d_1_2/BiasAdd"
+      float_ops: 3136
+      total_definition_count: 1
+      total_float_ops: 3136
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: 1
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 16
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 16
+          }
+        }
+      }
+    }
+    graph_nodes {
+      name: "sequential_1/conv2d_2_1/BiasAdd"
+      total_definition_count: 1
+      input_shapes {
+        key: 0
+        value {
+          dim {
+            size: -1
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 14
+          }
+          dim {
+            size: 32
+          }
+        }
+      }
+      input_shapes {
+        key: 1
+        value {
+          dim {
+            size: 32
+          }
+        }
+      }
+    }
+    graph_nodes {
+      name: "sequential_1/conv2d_3_1/BiasAdd"
       total_definition_count: 1
       input_shapes {
         key: 0
@@ -214,7 +352,7 @@ children {
       }
     }
     graph_nodes {
-      name: "sequential_1/conv2d_2_1/BiasAdd"
+      name: "sequential_1/conv2d_4_1/BiasAdd"
       total_definition_count: 1
       input_shapes {
         key: 0
