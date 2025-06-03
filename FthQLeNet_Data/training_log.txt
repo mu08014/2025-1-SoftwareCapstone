@@ -1,38 +1,38 @@
 500 MNIST Data size, 10 epochs
 
 Epoch	Accuracy	Loss
-1	0.19200000166893005	1.719197392463684
-2	0.18799999356269836	1.6384248733520508
-3	0.17599999904632568	1.6215236186981201
-4	0.1679999977350235	1.6142070293426514
-5	0.1979999989271164	1.60990309715271
-6	0.20600000023841858	1.609136700630188
-7	0.21400000154972076	1.6113083362579346
-8	0.17599999904632568	1.6103200912475586
-9	0.17000000178813934	1.61387038230896
-10	0.20200000703334808	1.6111382246017456
+1	0.1979999989271164	2.224972724914551
+2	0.17599999904632568	1.852192997932434
+3	0.20800000429153442	1.6768934726715088
+4	0.22599999606609344	1.6126525402069092
+5	0.18799999356269836	1.61767578125
+6	0.17000000178813934	1.6111806631088257
+7	0.19200000166893005	1.6096845865249634
+8	0.20000000298023224	1.6098814010620117
+9	0.20000000298023224	1.6094486713409424
+10	0.20000000298023224	1.6094480752944946
 
 Train Class-wise Accuracy per Epoch:
-Class 0: [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-Class 2: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 3: [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 4: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]
+Class 0: [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 1: [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]
+Class 2: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 3: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+Class 4: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 Test Class-wise Accuracy per Epoch:
-Class 0: [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-Class 2: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 3: [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 4: [0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]
+Class 0: [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 1: [0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]
+Class 2: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 3: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+Class 4: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-Max Parameter Count: 132853
+Max Parameter Count: 102565
 Total FLOPs: name: "_TFProfRoot"
-total_float_ops: 323008
+total_float_ops: 5553856
 children {
   name: "Conv2D"
-  float_ops: 313600
-  total_float_ops: 323008
+  float_ops: 5531904
+  total_float_ops: 5553856
   graph_nodes {
     name: "sequential_1/conv2d_1/convolution"
     float_ops: 112896
@@ -75,9 +75,9 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_1_2/convolution"
-    float_ops: 200704
+    float_ops: 3612672
     total_definition_count: 1
-    total_float_ops: 200704
+    total_float_ops: 3612672
     input_shapes {
       key: 0
       value {
@@ -99,51 +99,13 @@ children {
       key: 1
       value {
         dim {
-          size: 1
+          size: 3
         }
         dim {
-          size: 1
+          size: 3
         }
         dim {
           size: 32
-        }
-        dim {
-          size: 16
-        }
-      }
-    }
-  }
-  graph_nodes {
-    name: "sequential_1/conv2d_2_1/convolution"
-    total_definition_count: 1
-    input_shapes {
-      key: 0
-      value {
-        dim {
-          size: -1
-        }
-        dim {
-          size: 14
-        }
-        dim {
-          size: 14
-        }
-        dim {
-          size: 64
-        }
-      }
-    }
-    input_shapes {
-      key: 1
-      value {
-        dim {
-          size: 1
-        }
-        dim {
-          size: 1
-        }
-        dim {
-          size: 64
         }
         dim {
           size: 32
@@ -152,13 +114,15 @@ children {
     }
   }
   graph_nodes {
-    name: "sequential_1/conv2d_3_1/convolution"
+    name: "sequential_1/conv2d_2_1/convolution"
+    float_ops: 1806336
     total_definition_count: 1
+    total_float_ops: 1806336
     input_shapes {
       key: 0
       value {
         dim {
-          size: -1
+          size: 1
         }
         dim {
           size: 7
@@ -182,44 +146,6 @@ children {
         }
         dim {
           size: 32
-        }
-        dim {
-          size: 64
-        }
-      }
-    }
-  }
-  graph_nodes {
-    name: "sequential_1/conv2d_4_1/convolution"
-    total_definition_count: 1
-    input_shapes {
-      key: 0
-      value {
-        dim {
-          size: -1
-        }
-        dim {
-          size: 7
-        }
-        dim {
-          size: 7
-        }
-        dim {
-          size: 64
-        }
-      }
-    }
-    input_shapes {
-      key: 1
-      value {
-        dim {
-          size: 3
-        }
-        dim {
-          size: 3
-        }
-        dim {
-          size: 64
         }
         dim {
           size: 64
@@ -229,8 +155,8 @@ children {
   }
   children {
     name: "BiasAdd"
-    float_ops: 9408
-    total_float_ops: 9408
+    float_ops: 15680
+    total_float_ops: 21952
     graph_nodes {
       name: "sequential_1/conv2d_1/BiasAdd"
       float_ops: 6272
@@ -264,9 +190,9 @@ children {
     }
     graph_nodes {
       name: "sequential_1/conv2d_1_2/BiasAdd"
-      float_ops: 3136
+      float_ops: 6272
       total_definition_count: 1
-      total_float_ops: 3136
+      total_float_ops: 6272
       input_shapes {
         key: 0
         value {
@@ -280,7 +206,7 @@ children {
             size: 14
           }
           dim {
-            size: 16
+            size: 32
           }
         }
       }
@@ -288,77 +214,21 @@ children {
         key: 1
         value {
           dim {
-            size: 16
+            size: 32
           }
         }
       }
     }
     graph_nodes {
       name: "sequential_1/conv2d_2_1/BiasAdd"
+      float_ops: 3136
       total_definition_count: 1
+      total_float_ops: 3136
       input_shapes {
         key: 0
         value {
           dim {
-            size: -1
-          }
-          dim {
-            size: 14
-          }
-          dim {
-            size: 14
-          }
-          dim {
-            size: 32
-          }
-        }
-      }
-      input_shapes {
-        key: 1
-        value {
-          dim {
-            size: 32
-          }
-        }
-      }
-    }
-    graph_nodes {
-      name: "sequential_1/conv2d_3_1/BiasAdd"
-      total_definition_count: 1
-      input_shapes {
-        key: 0
-        value {
-          dim {
-            size: -1
-          }
-          dim {
-            size: 7
-          }
-          dim {
-            size: 7
-          }
-          dim {
-            size: 64
-          }
-        }
-      }
-      input_shapes {
-        key: 1
-        value {
-          dim {
-            size: 64
-          }
-        }
-      }
-    }
-    graph_nodes {
-      name: "sequential_1/conv2d_4_1/BiasAdd"
-      total_definition_count: 1
-      input_shapes {
-        key: 0
-        value {
-          dim {
-            size: -1
+            size: 1
           }
           dim {
             size: 7
@@ -422,6 +292,55 @@ children {
         value {
           dim {
             size: 5
+          }
+        }
+      }
+    }
+    children {
+      name: "MaxPool"
+      float_ops: 6272
+      total_float_ops: 6272
+      graph_nodes {
+        name: "sequential_1/max_pooling2d_1/MaxPool2d"
+        float_ops: 6272
+        total_definition_count: 1
+        total_float_ops: 6272
+        input_shapes {
+          key: 0
+          value {
+            dim {
+              size: 1
+            }
+            dim {
+              size: 14
+            }
+            dim {
+              size: 14
+            }
+            dim {
+              size: 32
+            }
+          }
+        }
+      }
+      graph_nodes {
+        name: "sequential_1/max_pooling2d_1_2/MaxPool2d"
+        total_definition_count: 1
+        input_shapes {
+          key: 0
+          value {
+            dim {
+              size: -1
+            }
+            dim {
+              size: 7
+            }
+            dim {
+              size: 7
+            }
+            dim {
+              size: 64
+            }
           }
         }
       }

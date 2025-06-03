@@ -159,6 +159,8 @@ def QCTemplate():
 MAX_CIRCS_PER_RUN = 2048
 
 
+'''
+학습 잘 안되던 이전 코드
 def _make_binds(patches, thetas, d, t):
     keys = list(d) + list(t)
     mat  = np.hstack([patches, thetas])
@@ -187,9 +189,28 @@ def QuanvBatchProbabilities(patches, thetas):
             counts = r.data.counts
             p0 = counts.get('0', 0) / 1
             p1 = counts.get('1', 0) / 1
-            exps.append((p0 - p1))
+            exps.append((p0 - p1 + 1.0) * 0.5)
     
     return  np.asarray(exps, dtype=np.float32)
+'''
+
+def QuanvBatchProbabilities(patches, thetas):
+    backend, transpiled, d, t = QCTemplate()
+    total, exps = len(patches), []
+    for s in range(0, total, MAX_CIRCS_PER_RUN):
+        e     = min(s + MAX_CIRCS_PER_RUN, total)
+        binds = _make_binds(np.hstack([patches[s:e], thetas[s:e]]), d, t)
+        circs = [transpiled] * len(binds)
+        res   = backend.run(circs, parameter_binds=binds, shots=1).result()
+
+        exps.extend(((r.data.p0[0] - r.data.p0[1]) + 1.) * 0.5
+                    for r in res.results)
+    return np.asarray(exps, dtype=np.float32)
+
+
+def _make_binds(mat, d, t):
+    keys = list(d) + list(t)
+    return [{k: [float(v)] for k, v in zip(keys, row)} for row in mat]
 
 def _extract_patches_tf(x):
     ks = 3

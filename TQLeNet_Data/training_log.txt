@@ -1,38 +1,38 @@
 500 MNIST Data size, 10 epochs
 
 Epoch	Accuracy	Loss
-1	0.19599999487400055	1.6095064878463745
-2	0.20000000298023224	1.6094751358032227
-3	0.20000000298023224	1.6094541549682617
-4	0.20000000298023224	1.6094727516174316
-5	0.20000000298023224	1.6094530820846558
-6	0.20000000298023224	1.6094465255737305
-7	0.20000000298023224	1.6094491481781006
-8	0.20000000298023224	1.6094541549682617
-9	0.20000000298023224	1.6094577312469482
-10	0.20000000298023224	1.6094526052474976
+1	0.1979999989271164	2.2206265926361084
+2	0.21199999749660492	1.7528090476989746
+3	0.1899999976158142	1.6626396179199219
+4	0.16599999368190765	1.6370729207992554
+5	0.20399999618530273	1.6280395984649658
+6	0.1940000057220459	1.626970648765564
+7	0.18000000715255737	1.6245946884155273
+8	0.1979999989271164	1.614023208618164
+9	0.1899999976158142	1.6182971000671387
+10	0.1940000057220459	1.6140971183776855
 
 Train Class-wise Accuracy per Epoch:
-Class 0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 4: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+Class 0: [0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0]
+Class 1: [0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+Class 2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+Class 3: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 4: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 Test Class-wise Accuracy per Epoch:
-Class 0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 1: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 3: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-Class 4: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+Class 0: [0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0]
+Class 1: [0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]
+Class 2: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+Class 3: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+Class 4: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-Max Parameter Count: 132853
+Max Parameter Count: 158389
 Total FLOPs: name: "_TFProfRoot"
-total_float_ops: 323008
+total_float_ops: 3795344
 children {
   name: "Conv2D"
-  float_ops: 313600
-  total_float_ops: 323008
+  float_ops: 3775744
+  total_float_ops: 3795344
   graph_nodes {
     name: "sequential_1/conv2d_1/convolution"
     float_ops: 112896
@@ -75,9 +75,9 @@ children {
   }
   graph_nodes {
     name: "sequential_1/conv2d_1_2/convolution"
-    float_ops: 200704
+    float_ops: 3612672
     total_definition_count: 1
-    total_float_ops: 200704
+    total_float_ops: 3612672
     input_shapes {
       key: 0
       value {
@@ -89,6 +89,46 @@ children {
         }
         dim {
           size: 14
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+    input_shapes {
+      key: 1
+      value {
+        dim {
+          size: 3
+        }
+        dim {
+          size: 3
+        }
+        dim {
+          size: 32
+        }
+        dim {
+          size: 32
+        }
+      }
+    }
+  }
+  graph_nodes {
+    name: "sequential_1/conv2d_2_1/convolution"
+    float_ops: 50176
+    total_definition_count: 1
+    total_float_ops: 50176
+    input_shapes {
+      key: 0
+      value {
+        dim {
+          size: 1
+        }
+        dim {
+          size: 7
+        }
+        dim {
+          size: 7
         }
         dim {
           size: 32
@@ -114,44 +154,6 @@ children {
     }
   }
   graph_nodes {
-    name: "sequential_1/conv2d_2_1/convolution"
-    total_definition_count: 1
-    input_shapes {
-      key: 0
-      value {
-        dim {
-          size: -1
-        }
-        dim {
-          size: 14
-        }
-        dim {
-          size: 14
-        }
-        dim {
-          size: 64
-        }
-      }
-    }
-    input_shapes {
-      key: 1
-      value {
-        dim {
-          size: 1
-        }
-        dim {
-          size: 1
-        }
-        dim {
-          size: 64
-        }
-        dim {
-          size: 32
-        }
-      }
-    }
-  }
-  graph_nodes {
     name: "sequential_1/conv2d_3_1/convolution"
     total_definition_count: 1
     input_shapes {
@@ -167,7 +169,7 @@ children {
           size: 7
         }
         dim {
-          size: 32
+          size: 128
         }
       }
     }
@@ -181,45 +183,7 @@ children {
           size: 3
         }
         dim {
-          size: 32
-        }
-        dim {
-          size: 64
-        }
-      }
-    }
-  }
-  graph_nodes {
-    name: "sequential_1/conv2d_4_1/convolution"
-    total_definition_count: 1
-    input_shapes {
-      key: 0
-      value {
-        dim {
-          size: -1
-        }
-        dim {
-          size: 7
-        }
-        dim {
-          size: 7
-        }
-        dim {
-          size: 64
-        }
-      }
-    }
-    input_shapes {
-      key: 1
-      value {
-        dim {
-          size: 3
-        }
-        dim {
-          size: 3
-        }
-        dim {
-          size: 64
+          size: 128
         }
         dim {
           size: 64
@@ -229,8 +193,8 @@ children {
   }
   children {
     name: "BiasAdd"
-    float_ops: 9408
-    total_float_ops: 9408
+    float_ops: 13328
+    total_float_ops: 19600
     graph_nodes {
       name: "sequential_1/conv2d_1/BiasAdd"
       float_ops: 6272
@@ -264,9 +228,9 @@ children {
     }
     graph_nodes {
       name: "sequential_1/conv2d_1_2/BiasAdd"
-      float_ops: 3136
+      float_ops: 6272
       total_definition_count: 1
-      total_float_ops: 3136
+      total_float_ops: 6272
       input_shapes {
         key: 0
         value {
@@ -280,7 +244,7 @@ children {
             size: 14
           }
           dim {
-            size: 16
+            size: 32
           }
         }
       }
@@ -288,28 +252,30 @@ children {
         key: 1
         value {
           dim {
-            size: 16
+            size: 32
           }
         }
       }
     }
     graph_nodes {
       name: "sequential_1/conv2d_2_1/BiasAdd"
+      float_ops: 784
       total_definition_count: 1
+      total_float_ops: 784
       input_shapes {
         key: 0
         value {
           dim {
-            size: -1
+            size: 1
           }
           dim {
-            size: 14
+            size: 7
           }
           dim {
-            size: 14
+            size: 7
           }
           dim {
-            size: 32
+            size: 16
           }
         }
       }
@@ -317,42 +283,13 @@ children {
         key: 1
         value {
           dim {
-            size: 32
+            size: 16
           }
         }
       }
     }
     graph_nodes {
       name: "sequential_1/conv2d_3_1/BiasAdd"
-      total_definition_count: 1
-      input_shapes {
-        key: 0
-        value {
-          dim {
-            size: -1
-          }
-          dim {
-            size: 7
-          }
-          dim {
-            size: 7
-          }
-          dim {
-            size: 64
-          }
-        }
-      }
-      input_shapes {
-        key: 1
-        value {
-          dim {
-            size: 64
-          }
-        }
-      }
-    }
-    graph_nodes {
-      name: "sequential_1/conv2d_4_1/BiasAdd"
       total_definition_count: 1
       input_shapes {
         key: 0
@@ -422,6 +359,55 @@ children {
         value {
           dim {
             size: 5
+          }
+        }
+      }
+    }
+    children {
+      name: "MaxPool"
+      float_ops: 6272
+      total_float_ops: 6272
+      graph_nodes {
+        name: "sequential_1/max_pooling2d_1/MaxPool2d"
+        float_ops: 6272
+        total_definition_count: 1
+        total_float_ops: 6272
+        input_shapes {
+          key: 0
+          value {
+            dim {
+              size: 1
+            }
+            dim {
+              size: 14
+            }
+            dim {
+              size: 14
+            }
+            dim {
+              size: 32
+            }
+          }
+        }
+      }
+      graph_nodes {
+        name: "sequential_1/max_pooling2d_1_2/MaxPool2d"
+        total_definition_count: 1
+        input_shapes {
+          key: 0
+          value {
+            dim {
+              size: -1
+            }
+            dim {
+              size: 7
+            }
+            dim {
+              size: 7
+            }
+            dim {
+              size: 64
+            }
           }
         }
       }

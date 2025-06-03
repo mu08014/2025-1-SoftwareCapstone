@@ -1,7 +1,7 @@
 from AlexNet_test import ExAlexNet
 from Theoric_QCNN_Alexnet import ExTQCNN
 from LeNet_test import ExLeNet
-from QuantumLeNet_test import ExFQLeNet, ExSQLeNet, ExTQLeNet
+from QuantumLeNet_test import ExFQLeNet, ExSQLeNet, ExTQLeNet, ExFthQLeNet, ExFSQLeNet, ExFSTQLeNet, ExFSTFQLeNet
 import os
 
 os.environ["OMP_NUM_THREADS"] = "12"
@@ -17,6 +17,11 @@ tf.config.optimizer.set_experimental_options({'auto_mixed_precision': False})
 JIT_KW = dict(jit_compile=False)
 
 if __name__ == '__main__':
-    #ExTQLeNet()
-    ExSQLeNet()
     #ExLeNet()
+    #ExFQLeNet()
+    #ExSQLeNet()
+    #ExTQLeNet()
+    #ExFthQLeNet()
+    #ExFSQLeNet()
+    #ExFSTQLeNet()
+    ExFSTFQLeNet()
