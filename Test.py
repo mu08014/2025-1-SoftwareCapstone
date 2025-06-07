@@ -39,8 +39,8 @@ def load_mnist_test_14x14_selected(sample_per_class: int = 20):
 
     return x, y
 
-def evaluate_and_plot(model_path: str, save_dir: str) -> None:
-    x_test, y_test = load_mnist_test_14x14_selected(sample_per_class=100)
+def evaluate_and_plot(model_path: str, save_dir: str, image_num: int) -> None:
+    x_test, y_test = load_mnist_test_14x14_selected(sample_per_class=image_num)
     
     custom_objects = {
         "Quanv3x3LayerClass": Quanv3x3LayerClass,
@@ -88,5 +88,5 @@ def evaluate_and_plot(model_path: str, save_dir: str) -> None:
     print("plot saved to :", out_path)
 
 if __name__=='__main__':
-    evaluate_and_plot("FQLeNet_Data/fq_lenet_model.keras", "FQLeNet_Data")
+    evaluate_and_plot("FQLeNet_Data/fq_lenet_model.keras", "FQLeNet_Data", 100)
     
